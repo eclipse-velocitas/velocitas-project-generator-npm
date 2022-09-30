@@ -16,22 +16,16 @@ import axios from 'axios';
 import { Buffer } from 'buffer';
 import { ProjectGeneratorError } from './project-generator-error';
 import { StatusCodes } from 'http-status-codes';
-
-const GITHUB_API_URL = 'https://api.github.com/repos';
-const PYTHON_TEMPLATE_URL = `${GITHUB_API_URL}/eclipse-velocitas/vehicle-app-python-template`;
-
-const CONTENT_ENCODINGS = { utf8: 'utf-8', base64: 'base64' };
-
-const GIT_DATA_TYPES = { blob: 'blob', tree: 'tree', commit: 'commit' };
-const GIT_DATA_MODES = {
-    fileBlob: '100644',
-    executableBlob: '100755',
-    subdirectoryTree: '040000',
-    submoduleCommit: '160000',
-    symlinkPathBlob: '120000',
-};
-const DEFAULT_REPOSITORY_DESCRIPTION = 'Template generated from eclipse-velocitas';
-const DEFAULT_COMMIT_MESSAGE = 'Update content with digital.auto code';
+import { CodeFormatter } from './code-formatter';
+import {
+    CONTENT_ENCODINGS,
+    DEFAULT_COMMIT_MESSAGE,
+    DEFAULT_REPOSITORY_DESCRIPTION,
+    GITHUB_API_URL,
+    GIT_DATA_MODES,
+    GIT_DATA_TYPES,
+    PYTHON_TEMPLATE_URL,
+} from './constants';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
@@ -43,6 +37,7 @@ const DEFAULT_COMMIT_MESSAGE = 'Update content with digital.auto code';
 export class ProjectGenerator {
     private repositoryPath;
     private requestConfig;
+    private codeFormatter: CodeFormatter = new CodeFormatter();
     /**
      * Parameter will be used to call the GitHub API as follows:
      * https://api.github.com/repos/OWNER/REPO
@@ -181,8 +176,7 @@ export class ProjectGenerator {
     }
 
     private async updateContent(appName: string, codeSnippet: string): Promise<any> {
-        const getAppManifestContentResponse = await axios.get(`${this.repositoryPath}/contents/app/AppManifest.json`, this.requestConfig);
-        const appManifestContentData = getAppManifestContentResponse.data.content;
+        const appManifestContentData = await this.getFileContentData('AppManifest');
         let decodedContent = JSON.parse(
             Buffer.from(appManifestContentData, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
                 CONTENT_ENCODINGS.utf8 as BufferEncoding
@@ -194,8 +188,23 @@ export class ProjectGenerator {
             CONTENT_ENCODINGS.base64 as BufferEncoding
         );
         const appManifestBlobSha = await this.createBlob(encodedUpdateContent);
-        const mainPyBlobSha = await this.createBlob(codeSnippet);
+        const mainPyContentData = await this.getFileContentData('main');
+        const formattedMainPy = this.codeFormatter.formatMainPy(mainPyContentData, codeSnippet);
+        const mainPyBlobSha = await this.createBlob(formattedMainPy);
         await this.updateTree(appManifestBlobSha, mainPyBlobSha);
+    }
+
+    private async getFileContentData(file: string): Promise<string> {
+        let fileContentResponse;
+        if (file === 'AppManifest') {
+            fileContentResponse = await axios.get(`${this.repositoryPath}/contents/app/AppManifest.json`, this.requestConfig);
+        } else if (file === 'main') {
+            fileContentResponse = await axios.get(`${this.repositoryPath}/contents/app/src/main.py`, this.requestConfig);
+        } else {
+            throw new Error();
+        }
+        const fileContentData = fileContentResponse.data.content;
+        return fileContentData;
     }
 
     private async getBaseTreeSha(): Promise<string> {
