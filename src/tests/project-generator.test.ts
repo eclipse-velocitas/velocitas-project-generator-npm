@@ -42,6 +42,7 @@ describe('Project Generator', () => {
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().put('/actions/permissions').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents/app/AppManifest.json').reply(200, { content: BASE64_CONTENT });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents/app/src/main.py').reply(200, { content: BASE64_CONTENT });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().post('/git/blobs').reply(200, { sha: MOCK_SHA });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/git/trees/main').reply(200, { sha: MOCK_SHA });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/trees').reply(200, { sha: MOCK_SHA });

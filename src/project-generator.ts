@@ -25,7 +25,7 @@ import {
     GIT_DATA_MODES,
     GIT_DATA_TYPES,
     PYTHON_TEMPLATE_URL,
-} from './constants';
+} from './utils/constants';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
@@ -189,7 +189,7 @@ export class ProjectGenerator {
         );
         const appManifestBlobSha = await this.createBlob(encodedUpdateContent);
         const mainPyContentData = await this.getFileContentData('main');
-        const formattedMainPy = this.codeFormatter.formatMainPy(mainPyContentData, codeSnippet);
+        const formattedMainPy = this.codeFormatter.formatMainPy(mainPyContentData, codeSnippet, appName);
         const mainPyBlobSha = await this.createBlob(formattedMainPy);
         await this.updateTree(appManifestBlobSha, mainPyBlobSha);
     }
