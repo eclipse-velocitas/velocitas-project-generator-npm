@@ -23,11 +23,11 @@ export const PYTHON = {
 export const VELOCITAS = {
     MAIN_METHOD: 'async def main():',
     VEHICLE_APP_SUFFIX: 'App',
-    CLASS_METHOD_SIGNATURE: '(self, ',
+    CLASS_METHOD_SIGNATURE: '(self, data: DataPointReply)',
     SUBSCRIPTION_SIGNATURE: '.subscribe(self.',
     INFO_LOGGER_SIGNATURE: 'logger.info(',
     VEHICLE_CALL: 'await self.Vehicle',
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
 };
-export const DIGITAL_AUTO = { VEHICLE_INIT: 'Vehicle()' };
+export const DIGITAL_AUTO = { VEHICLE_INIT: 'Vehicle()', SET_TEXT: 'set_text', SUBSCRIBE_CALL: '.subscribe(' };
 export const INDENTATION = { COUNT_CLASS: 4, COUNT_METHOD: 8 };
