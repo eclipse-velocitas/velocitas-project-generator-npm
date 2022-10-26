@@ -2,9 +2,12 @@ name: Publish Package to GitHub
 on:
   push:
     branches: ['main']
+  pull_request:
+    branches: ['main']
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: Run unit tests and publish package on main
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -16,5 +19,6 @@ jobs:
       - run: npm run build
       - run: npm run test
       - run: npm publish
+        if: contains('refs/heads/main', github.ref)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
