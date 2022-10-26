@@ -232,10 +232,7 @@ export class CodeFormatter {
             for (let index = methodStartIndex; array[index] != ''; index++) {
                 tempMethods.push(array[index]);
                 if (array[index].includes(PYTHON.SYNC_METHOD_START)) {
-                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]).replace(
-                        PYTHON.SYNC_METHOD_START,
-                        PYTHON.ASYNC_METHOD_START
-                    );
+                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]);
                     tempModifiedMethods.push(
                         array[index]
                             .replace(PYTHON.SYNC_METHOD_START, PYTHON.ASYNC_METHOD_START)
