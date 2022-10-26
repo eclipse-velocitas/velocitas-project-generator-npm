@@ -18,7 +18,7 @@ export const REGEX = {
     // Remove all lines with whitespaces followed by # (comments) from template
     GET_WHITESPACE_FOLLOWED_BY_COMMENTS: /^(?:[\t ]*(?:\r?|\r).\#.*\n?)+/gm,
     // Everything between multiline comment from template
-    EVERYTHING_BETWEEN_MULTILINE: /([\t ]*\"\"\"[\s\S]*?\"\"\")/gm,
+    EVERYTHING_BETWEEN_MULTILINE: /([^\S\r\n]*\"\"\"[\s\S]*?\"\"\")/gm,
     // Every """ (docstring) from template
     GET_EVERY_PYTHON_DOCSTRING: /^(?:[\t ]*(?:\r?|\r).\"\"\".*\n?)+/gm,
     // Get everything between on_speed_change and "async def main():" from template
