@@ -22,6 +22,7 @@ export const PYTHON = {
 };
 export const VELOCITAS = {
     MAIN_METHOD: 'async def main():',
+    ON_START: 'async def on_start(self):',
     VEHICLE_APP_SUFFIX: 'App',
     CLASS_METHOD_SIGNATURE: '(self, data: DataPointReply)',
     SUBSCRIPTION_SIGNATURE: '.subscribe(self.',

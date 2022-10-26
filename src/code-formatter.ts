@@ -125,8 +125,7 @@ export class CodeFormatter {
         }
         try {
             const mainPyBaseStructure = decodedMainPyContentData
-                .replace(REGEX.FROM_LOGGER_TO_CLASS, `\n\n${seperateClassForTemplate}\n\n${PYTHON.CLASS}`)
-                .replace(REGEX.GET_SAMPLE_VEHICLE_APP, '')
+                .replace(REGEX.FIND_GLOBAL_TOPIC_VARIABLES, `\n\n${seperateClassForTemplate}\n\n${PYTHON.CLASS}`)
                 .replace(REGEX.GET_WHITESPACE_FOLLOWED_BY_COMMENTS, '')
                 .replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '')
                 .replace(REGEX.GET_EVERY_PYTHON_DOCSTRING, '')
@@ -150,7 +149,13 @@ export class CodeFormatter {
         const appNameForTemplate = `${appName.charAt(0).toUpperCase()}${appName.slice(1)}${VELOCITAS.VEHICLE_APP_SUFFIX}`;
         try {
             const newMainPy = extractedMainPyStructure
-                .replace(REGEX.FIND_BEGIN_OF_ON_START_METHOD, this.indentCodeSnippet(adaptedCodeSnippet, INDENTATION.COUNT_METHOD))
+                .replace(
+                    REGEX.FIND_BEGIN_OF_ON_START_METHOD,
+                    `${this.indentCodeSnippet(VELOCITAS.ON_START, INDENTATION.COUNT_CLASS)}\n${this.indentCodeSnippet(
+                        adaptedCodeSnippet,
+                        INDENTATION.COUNT_METHOD
+                    )}`
+                )
                 .replace(REGEX.FIND_SAMPLE_APP, appNameForTemplate);
             return newMainPy;
         } catch (error) {
@@ -227,7 +232,10 @@ export class CodeFormatter {
             for (let index = methodStartIndex; array[index] != ''; index++) {
                 tempMethods.push(array[index]);
                 if (array[index].includes(PYTHON.SYNC_METHOD_START)) {
-                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]);
+                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]).replace(
+                        PYTHON.SYNC_METHOD_START,
+                        PYTHON.ASYNC_METHOD_START
+                    );
                     tempModifiedMethods.push(
                         array[index]
                             .replace(PYTHON.SYNC_METHOD_START, PYTHON.ASYNC_METHOD_START)
@@ -251,11 +259,9 @@ export class CodeFormatter {
             ?.split(PYTHON.SYNC_METHOD_START)[1]
             .trim()
             .split(`(`)[0];
-
         const vssSignal = this.codeSnippetStringArray
             .find((line: string) => line.includes(`${DIGITAL_AUTO.SUBSCRIBE_CALL}${methodName}`))
             ?.split(`${DIGITAL_AUTO.SUBSCRIBE_CALL}`)[0];
-
         const callBackVariable = methodString.split(`(`)[1].split(`:`)[0].split(`)`)[0];
 
         const subscriptionCallbackVariableLine = this.indentCodeSnippet(

@@ -14,19 +14,17 @@
 
 export const REGEX = {
     // Get everything between logger and class from template
-    FROM_LOGGER_TO_CLASS: /(?<=\_\))[\r\n]+(^[\S\s*]*class)/gm,
-    // Get """Sample Vehicle App""" from template
-    GET_SAMPLE_VEHICLE_APP: /(^\"\"\").*[\r\n]+[\r\n]/gm,
+    FIND_GLOBAL_TOPIC_VARIABLES: /(?<=\_\))[\r\n]+(^[\S\s*]*class)/gm,
     // Remove all lines with whitespaces followed by # (comments) from template
     GET_WHITESPACE_FOLLOWED_BY_COMMENTS: /^(?:[\t ]*(?:\r?|\r).\#.*\n?)+/gm,
     // Everything between multiline comment from template
-    EVERYTHING_BETWEEN_MULTILINE: /(?=\"\"\")[\S\s]*(?<=[\s]\"\"\"$)[\S\s]/gm,
+    EVERYTHING_BETWEEN_MULTILINE: /([\t ]*\"\"\"[\s\S]*?\"\"\")/gm,
     // Every """ (docstring) from template
     GET_EVERY_PYTHON_DOCSTRING: /^(?:[\t ]*(?:\r?|\r).\"\"\".*\n?)+/gm,
     // Get everything between on_speed_change and "async def main():" from template
     GET_EVERY_DELETABLE_TEMPLATE_CODE: /(?<=\(self\.on\_speed\_change\))[\r\n]+(^[\S\s*]*async def main\(\)\:)/gm,
     // Replace content in on_start method (Here digital.auto code comes in)
-    FIND_BEGIN_OF_ON_START_METHOD: /[\t ]*logger\.info\(\"SampleApp started\.\"\)[\r\n]+([^\r\n]+)/gm,
+    FIND_BEGIN_OF_ON_START_METHOD: /[\t ]*async def on\_start\(self\)\:[\r\n]+([^\r\n]+)/gm,
     FIND_VEHICLE_OCCURENCE: /vehicle/gm,
     FIND_UNWANTED_VEHICLE_CHANGE: /\(await self\.Vehicle/gm,
     FIND_PRINTF_STATEMENTS: /print\(f/gm,
