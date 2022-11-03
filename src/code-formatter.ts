@@ -78,7 +78,6 @@ export class CodeFormatter {
         this.basicImportsArray = this.identifyBasicImports(this.codeSnippetStringArray);
         this.seperateClassesArray = this.identifySeperateClass(this.codeSnippetStringArray);
         this.seperateMethodsArray = this.identifyMethodBlocks(this.codeSnippetStringArray);
-
         const codeSnippetForTemplate = this.adaptCodeBlocksToVelocitasStructure(
             this.createMultilineStringFromArray(this.codeSnippetStringArray)
         );
@@ -232,12 +231,16 @@ export class CodeFormatter {
             for (let index = methodStartIndex; array[index] != ''; index++) {
                 tempMethods.push(array[index]);
                 if (array[index].includes(PYTHON.SYNC_METHOD_START)) {
-                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]);
-                    tempModifiedMethods.push(
-                        array[index]
+                    let methodLine;
+                    if (array[index].startsWith(PYTHON.ASYNC_METHOD_START)) {
+                        methodLine = array[index].replace(/\(.*\)/, VELOCITAS.CLASS_METHOD_SIGNATURE);
+                    } else {
+                        methodLine = array[index]
                             .replace(PYTHON.SYNC_METHOD_START, PYTHON.ASYNC_METHOD_START)
-                            .replace(/\(.*\)/, VELOCITAS.CLASS_METHOD_SIGNATURE)
-                    );
+                            .replace(/\(.*\)/, VELOCITAS.CLASS_METHOD_SIGNATURE);
+                    }
+                    const subscriptionCallbackVariableLine = this.mapSubscriptionCallbackForVelocitas(array[index]);
+                    tempModifiedMethods.push(methodLine);
                     tempModifiedMethods.push(subscriptionCallbackVariableLine);
                 } else {
                     tempModifiedMethods.push(array[index]);
@@ -251,18 +254,24 @@ export class CodeFormatter {
     }
 
     private mapSubscriptionCallbackForVelocitas(methodString: string): string {
-        const methodName = this.codeSnippetStringArray
+        let methodName: any;
+        let vssSignal;
+        methodName = this.codeSnippetStringArray
             .find((line: string) => line.includes(methodString))
             ?.split(PYTHON.SYNC_METHOD_START)[1]
             .trim()
             .split(`(`)[0];
-        const vssSignal = this.codeSnippetStringArray
+        vssSignal = this.codeSnippetStringArray
             .find((line: string) => line.includes(`${DIGITAL_AUTO.SUBSCRIBE_CALL}${methodName}`))
             ?.split(`${DIGITAL_AUTO.SUBSCRIBE_CALL}`)[0];
+
+        if (vssSignal?.startsWith(`${PYTHON.AWAIT} `)) {
+            vssSignal = vssSignal.split(`${PYTHON.AWAIT} `)[1];
+        }
         const callBackVariable = methodString.split(`(`)[1].split(`:`)[0].split(`)`)[0];
 
         const subscriptionCallbackVariableLine = this.indentCodeSnippet(
-            `${callBackVariable} = data.get(${vssSignal})`,
+            `${callBackVariable} = data.get(${vssSignal}).value`,
             INDENTATION.COUNT_CLASS
         );
 
@@ -274,10 +283,16 @@ export class CodeFormatter {
         this.adaptToMqtt(newMainPyStringArray);
         const firstLineOfImport = newMainPyStringArray.find((element: string) => element.includes(PYTHON.IMPORT));
         this.basicImportsArray.forEach((basicImportString: string) => {
-            newMainPyStringArray.splice(newMainPyStringArray.indexOf(firstLineOfImport as string), 0, basicImportString);
+            if (basicImportString != DIGITAL_AUTO.IMPORT_PLUGINS) {
+                newMainPyStringArray.splice(newMainPyStringArray.indexOf(firstLineOfImport as string), 0, basicImportString);
+            }
         });
         const finalCode = this.createMultilineStringFromArray(newMainPyStringArray);
-        const formattedFinalCode = finalCode.replace(REGEX.FIND_SUBSCRIBE_METHOD_CALL, VELOCITAS.SUBSCRIPTION_SIGNATURE);
+        const formattedFinalCode = finalCode
+            .replace(REGEX.FIND_SUBSCRIBE_METHOD_CALL, VELOCITAS.SUBSCRIPTION_SIGNATURE)
+            .replace(/await await/gm, `${PYTHON.AWAIT}`)
+            .replace(/\.get\(\)/gm, `${VELOCITAS.GET_VALUE}`)
+            .replace(REGEX.GET_EVERY_PLUGINS_USAGE, '');
         const encodedNewMainPy = Buffer.from(formattedFinalCode, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
             CONTENT_ENCODINGS.base64 as BufferEncoding
         );

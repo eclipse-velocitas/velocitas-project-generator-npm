@@ -19,6 +19,7 @@ export const PYTHON = {
     COMMENT: '#',
     SYNC_METHOD_START: 'def',
     ASYNC_METHOD_START: 'async def',
+    AWAIT: 'await',
 };
 export const VELOCITAS = {
     MAIN_METHOD: 'async def main():',
@@ -29,6 +30,12 @@ export const VELOCITAS = {
     INFO_LOGGER_SIGNATURE: 'logger.info(',
     VEHICLE_CALL: 'await self.Vehicle',
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
+    GET_VALUE: '.get().value',
 };
-export const DIGITAL_AUTO = { VEHICLE_INIT: 'Vehicle()', SET_TEXT: 'set_text', SUBSCRIBE_CALL: '.subscribe(' };
+export const DIGITAL_AUTO = {
+    VEHICLE_INIT: 'Vehicle()',
+    SET_TEXT: 'set_text',
+    SUBSCRIBE_CALL: '.subscribe(',
+    IMPORT_PLUGINS: 'import plugins',
+};
 export const INDENTATION = { COUNT_CLASS: 4, COUNT_METHOD: 8 };

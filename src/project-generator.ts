@@ -182,7 +182,7 @@ export class ProjectGenerator {
                 CONTENT_ENCODINGS.utf8 as BufferEncoding
             )
         );
-        decodedContent[0].Name = appName;
+        decodedContent[0].Name = appName.toLowerCase();
         const updateContentString = JSON.stringify(decodedContent, null, 4);
         const encodedUpdateContent = Buffer.from(updateContentString, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
             CONTENT_ENCODINGS.base64 as BufferEncoding

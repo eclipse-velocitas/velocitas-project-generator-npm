@@ -72,30 +72,30 @@ class TestApp(VehicleApp):
         logger.info("Finished Wiping")
 
     async def on_wiper_position_changed(self, data: DataPointReply):
-        position = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition)
+        position = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition).value
         logger.info("Listener was triggered")
         logger.info("Wiper is moving")
         await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Wiper is finished and will return to {position}"""}}))
         await self.publish_mqtt_event("CarDash", json.dumps({"result": {"message": f"""Wiper is finished and will return to {position}"""}}))
-        if position >= await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.get():
+        if position >= await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.get().value:
             await self.publish_mqtt_event("CarDash", json.dumps({"result": {"message": f"""Wiper {position} reached"""}}))
 
     async def on_wiper_start(self, data: DataPointReply):
-        WipeMode = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.Mode)
+        WipeMode = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.Mode).value
         logger.info("---------Wiper movement triggered------------")
-        logger.info("Wiping Mode: {await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.get()}")
+        logger.info("Wiping Mode: {await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.get().value}")
         if WipeMode == "WIPE":
-            WiperTarget = await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.get()
+            WiperTarget = await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.get().value
             logger.info("Wiping Target: {WiperTarget}")
-            ActualPosition = await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.get()
+            ActualPosition = await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.get().value
             steps = 1
             if ActualPosition < WiperTarget:
-                steps = await self.Vehicle.Body.Windshield.Front.Wiping.System.Frequency.get() /10
+                steps = await self.Vehicle.Body.Windshield.Front.Wiping.System.Frequency.get().value /10
             if ActualPosition > WiperTarget:
-                steps = await self.Vehicle.Body.Windshield.Front.Wiping.System.Frequency.get() / 10 * -1
+                steps = await self.Vehicle.Body.Windshield.Front.Wiping.System.Frequency.get().value / 10 * -1
             while ActualPosition != WiperTarget:
                 await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.set(ActualPosition)
-                logger.info("Acutal wiper Pos: {await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.get()} Target: {WiperTarget}")
+                logger.info("Acutal wiper Pos: {await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.get().value} Target: {WiperTarget}")
                 ActualPosition += steps
             logger.info("Finished Movement")
 
