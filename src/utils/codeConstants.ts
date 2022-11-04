@@ -17,8 +17,8 @@ export const PYTHON = {
     IMPORT: 'import',
     IMPORT_DEPENDENCY_FROM: 'from',
     COMMENT: '#',
-    SYNC_METHOD_START: 'def',
-    ASYNC_METHOD_START: 'async def',
+    SYNC_METHOD_START: 'def ',
+    ASYNC_METHOD_START: 'async def ',
     AWAIT: 'await',
 };
 export const VELOCITAS = {
