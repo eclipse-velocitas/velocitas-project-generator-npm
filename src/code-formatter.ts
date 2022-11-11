@@ -19,6 +19,8 @@ import { REGEX } from './utils/regex';
 
 export class CodeFormatter {
     private basicImportsArray: string[] = [];
+    private variablesArray: string[][] = [];
+    private variableNames: string[] = [];
     private seperateClassesArray: string[][] = [];
     private seperateMethodsArray: string[][] = [];
     private codeSnippetStringArray: string[] = [];
@@ -67,6 +69,7 @@ export class CodeFormatter {
             CONTENT_ENCODINGS.utf8 as BufferEncoding
         );
         this.codeSnippetStringArray = this.createArrayFromMultilineString(decodedBase64CodeSnippet);
+
         this.codeSnippetStringArray = this.removeSubstringFromArray(this.codeSnippetStringArray, DIGITAL_AUTO.VEHICLE_INIT);
         this.codeSnippetStringArray = this.removeSubstringFromArray(
             this.codeSnippetStringArray,
@@ -76,8 +79,14 @@ export class CodeFormatter {
         this.codeSnippetStringArray = this.removeSubstringFromArray(this.codeSnippetStringArray, PYTHON.COMMENT);
 
         this.basicImportsArray = this.identifyBasicImports(this.codeSnippetStringArray);
+        this.variablesArray = this.identifyVariables(this.codeSnippetStringArray);
+        this.variableNames = this.identifyVariableNames(this.variablesArray);
+
         this.seperateClassesArray = this.identifySeperateClass(this.codeSnippetStringArray);
         this.seperateMethodsArray = this.identifyMethodBlocks(this.codeSnippetStringArray);
+
+        this.codeSnippetStringArray = this.changeMemberVariables(this.codeSnippetStringArray);
+
         const codeSnippetForTemplate = this.adaptCodeBlocksToVelocitasStructure(
             this.createMultilineStringFromArray(this.codeSnippetStringArray)
         );
@@ -146,6 +155,10 @@ export class CodeFormatter {
 
     private addCodeSnippetToMainPy(extractedMainPyStructure: string, adaptedCodeSnippet: string, appName: string): string {
         const appNameForTemplate = `${appName.charAt(0).toUpperCase()}${appName.slice(1)}${VELOCITAS.VEHICLE_APP_SUFFIX}`;
+        let memberVariables = '';
+        if (this.variableNames.length != 0) {
+            memberVariables = this.prepareMemberVariables(this.variableNames);
+        }
         try {
             const newMainPy = extractedMainPyStructure
                 .replace(
@@ -154,6 +167,10 @@ export class CodeFormatter {
                         adaptedCodeSnippet,
                         INDENTATION.COUNT_METHOD
                     )}`
+                )
+                .replace(
+                    REGEX.FIND_VEHICLE_INIT,
+                    `self.Vehicle = vehicle_client\n${this.indentCodeSnippet(memberVariables, INDENTATION.COUNT_METHOD)}`
                 )
                 .replace(REGEX.FIND_SAMPLE_APP, appNameForTemplate);
             return newMainPy;
@@ -183,8 +200,53 @@ export class CodeFormatter {
 
     private identifyBasicImports(codeSnippetStringArray: string[]): string[] {
         const basicImportsArray = codeSnippetStringArray.filter((stringElement) => stringElement.includes(PYTHON.IMPORT));
+        if (codeSnippetStringArray.find((e: any) => e.includes('aio.sleep'))) {
+            basicImportsArray.push(VELOCITAS.IMPORT_TIME);
+        }
         this.cleanUpCodeSnippet(basicImportsArray);
         return basicImportsArray;
+    }
+
+    private identifyVariables(codeSnippetStringArray: string[]): string[][] {
+        const variablesArray: string[][] = [];
+        codeSnippetStringArray.forEach((stringElement) => {
+            if (!stringElement.includes('plugins')) {
+                const tempVariables: string[] = [];
+                if (stringElement.includes('= {')) {
+                    for (
+                        let index = codeSnippetStringArray.indexOf(stringElement);
+                        codeSnippetStringArray[index] !== '' && !codeSnippetStringArray[index].includes('}}');
+                        index++
+                    ) {
+                        tempVariables.push(codeSnippetStringArray[index]);
+                    }
+                    variablesArray.push(tempVariables);
+                }
+                if (stringElement.includes(' = ') && !stringElement.includes('= {')) {
+                    variablesArray.push([stringElement]);
+                }
+            }
+        });
+        return variablesArray;
+    }
+
+    private identifyVariableNames(variablesArray: string[][]): string[] {
+        let variableNames: string[] = [];
+        variablesArray.forEach((variableArray: string[]) => {
+            variableArray.forEach((variable: string) => {
+                if (variable.includes('=')) {
+                    if (variable.includes(',')) {
+                        variable.split(',').forEach((singleVariable: string) => {
+                            variableNames.push(singleVariable.split('=')[0].trim());
+                        });
+                    } else {
+                        variableNames.push(variable.split('=')[0].trim());
+                    }
+                }
+            });
+        });
+        variableNames = Array.from(new Set(variableNames));
+        return variableNames;
     }
 
     private identifySeperateClass(array: string[]): string[][] {
@@ -205,6 +267,51 @@ export class CodeFormatter {
         });
         this.cleanUpCodeSnippet(classArray);
         return classArray;
+    }
+
+    private prepareMemberVariables(variableNames: string[]): string {
+        variableNames.forEach((variable: string, index) => {
+            variableNames[index] = `self.${variable.trim()} = None`;
+        });
+        const memberVariables = this.createMultilineStringFromArray(variableNames);
+        return memberVariables;
+    }
+
+    private changeMemberVariables(codeSnippet: string[]): string[] {
+        this.variableNames.forEach((variableName: string) => {
+            codeSnippet.forEach((stringElement: string, index) => {
+                if (stringElement.includes(`${variableName} =`) && !stringElement.includes(`self.`)) {
+                    codeSnippet[index] = `self.${stringElement}`;
+                }
+                if (stringElement.includes(`, ${variableName}`)) {
+                    const re = new RegExp(`(?<!")${variableName}(?!")`, 'g');
+                    codeSnippet[index] = stringElement.replace(re, `self.${variableName}`);
+                }
+                if (
+                    stringElement.includes(`${variableName} <=`) ||
+                    stringElement.includes(`= ${variableName}`) ||
+                    stringElement.includes(`${variableName} +`)
+                ) {
+                    codeSnippet[index] = stringElement.replace(variableName, `self.${variableName}`);
+                }
+            });
+        });
+        return codeSnippet;
+    }
+
+    private changeMemberVariablesInString(codeSnippet: string): string {
+        this.variableNames.forEach((variableName: string) => {
+            if (
+                codeSnippet.includes(`${variableName}`) &&
+                (!codeSnippet.includes(`.${variableName}`) ||
+                    !codeSnippet.includes(`${variableName}"`) ||
+                    !codeSnippet.includes(`"${variableName}`))
+            ) {
+                const re = new RegExp(`(?<![\\.\\"])${variableName}(?![\\.\\"])`, 'g');
+                codeSnippet = codeSnippet.replace(re, `self.${variableName}`);
+            }
+        });
+        return codeSnippet;
     }
 
     private lineBelongsToClass(array: string[], index: number): boolean {
@@ -231,7 +338,7 @@ export class CodeFormatter {
             for (let index = methodStartIndex; array[index] != ''; index++) {
                 tempMethods.push(array[index]);
                 if (array[index].includes(PYTHON.SYNC_METHOD_START)) {
-                    let methodLine;
+                    let methodLine: string;
                     if (array[index].startsWith(PYTHON.ASYNC_METHOD_START)) {
                         methodLine = array[index].replace(/\(.*\)/, VELOCITAS.CLASS_METHOD_SIGNATURE);
                     } else {
@@ -243,7 +350,7 @@ export class CodeFormatter {
                     tempModifiedMethods.push(methodLine);
                     tempModifiedMethods.push(subscriptionCallbackVariableLine);
                 } else {
-                    tempModifiedMethods.push(array[index]);
+                    tempModifiedMethods.push(this.changeMemberVariablesInString(array[index]));
                 }
             }
             methodArray.push(tempMethods);
@@ -279,20 +386,39 @@ export class CodeFormatter {
     }
 
     private finalizeMainPy(newMainPy: string): string {
-        const newMainPyStringArray = this.createArrayFromMultilineString(newMainPy);
-        this.adaptToMqtt(newMainPyStringArray);
-        const firstLineOfImport = newMainPyStringArray.find((element: string) => element.includes(PYTHON.IMPORT));
+        let finalCode: string | string[];
+        finalCode = this.createArrayFromMultilineString(newMainPy);
+        this.adaptToMqtt(finalCode);
+        const firstLineOfImport = finalCode.find((element: string) => element.includes(PYTHON.IMPORT));
         this.basicImportsArray.forEach((basicImportString: string) => {
             if (basicImportString != DIGITAL_AUTO.IMPORT_PLUGINS) {
-                newMainPyStringArray.splice(newMainPyStringArray.indexOf(firstLineOfImport as string), 0, basicImportString);
+                (finalCode as string[]).splice(finalCode.indexOf(firstLineOfImport as string), 0, basicImportString);
             }
         });
-        const finalCode = this.createMultilineStringFromArray(newMainPyStringArray);
-        const formattedFinalCode = finalCode
+        finalCode = this.createMultilineStringFromArray(finalCode);
+        const tempCode = finalCode
             .replace(REGEX.FIND_SUBSCRIBE_METHOD_CALL, VELOCITAS.SUBSCRIPTION_SIGNATURE)
             .replace(/await await/gm, `${PYTHON.AWAIT}`)
             .replace(/\.get\(\)/gm, `${VELOCITAS.GET_VALUE}`)
-            .replace(REGEX.GET_EVERY_PLUGINS_USAGE, '');
+            .replace(REGEX.GET_EVERY_PLUGINS_USAGE, '')
+            .replace(/.*plugins.*/, '')
+            .replace(/await aio/gm, 'time');
+
+        finalCode = this.createArrayFromMultilineString(tempCode);
+
+        finalCode.forEach((codeLine: string, index) => {
+            if (codeLine.includes(VELOCITAS.GET_VALUE)) {
+                if (codeLine.includes('{await')) {
+                    (finalCode as string[])[index] = codeLine.replace(/{await/, '{(await');
+                } else {
+                    (finalCode as string[])[index] = codeLine.replace(/await/, '(await');
+                }
+            }
+            if (codeLine.includes(VELOCITAS.INFO_LOGGER_SIGNATURE) && codeLine.includes('",')) {
+                (finalCode as string[])[index] = codeLine.replace('",', ': %s",');
+            }
+        });
+        const formattedFinalCode = this.createMultilineStringFromArray(finalCode);
         const encodedNewMainPy = Buffer.from(formattedFinalCode, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
             CONTENT_ENCODINGS.base64 as BufferEncoding
         );

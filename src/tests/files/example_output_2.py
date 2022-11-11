@@ -56,12 +56,16 @@ class TestApp(VehicleApp):
     def __init__(self, vehicle_client: Vehicle):
         super().__init__()
         self.Vehicle = vehicle_client
+        self.l_mood = None
+        self.dog = None
+        self.dog_mood = None
+        self.dog_is_sad = None
 
     async def on_start(self):
         await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.CLOSE)
 
-        dog = Dog()
-        dog_mood, dog_is_sad = dog.isSad()
+        self.dog = Dog()
+        self.dog_mood, self.dog_is_sad = dog.isSad()
 
 
         if dog_is_sad:
@@ -70,9 +74,9 @@ class TestApp(VehicleApp):
             await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.CLOSE)
 
         logger.info("INFO: 	 Is dog sad? {dog_is_sad}")
-        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {dog_mood} Sunroof: {await self.Vehicle.Cabin.Sunroof.Switch.get().value}"""}}))
+        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""}}))
 
-        logger.info("INFO: 	 What is Sunroof's Status? {await self.Vehicle.Cabin.Sunroof.Switch.get().value}")
+        logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
 
 
 

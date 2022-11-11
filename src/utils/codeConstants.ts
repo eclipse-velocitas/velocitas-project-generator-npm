@@ -30,7 +30,8 @@ export const VELOCITAS = {
     INFO_LOGGER_SIGNATURE: 'logger.info(',
     VEHICLE_CALL: 'await self.Vehicle',
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
-    GET_VALUE: '.get().value',
+    GET_VALUE: '.get()).value',
+    IMPORT_TIME: 'import time',
 };
 export const DIGITAL_AUTO = {
     VEHICLE_INIT: 'Vehicle()',

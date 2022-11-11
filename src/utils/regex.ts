@@ -21,11 +21,12 @@ export const REGEX = {
     EVERYTHING_BETWEEN_MULTILINE: /([^\S\r\n]*\"\"\"[\s\S]*?\"\"\")/gm,
     // Every """ (docstring) from template
     GET_EVERY_PYTHON_DOCSTRING: /^(?:[\t ]*(?:\r?|\r).\"\"\".*\n?)+/gm,
-    GET_EVERY_PLUGINS_USAGE: /^(?:[\t ]*(?:\r?|\r).plugins\..*\n?)+/gm,
+    GET_EVERY_PLUGINS_USAGE: /.*plugins.*/gm,
     // Get everything between on_speed_change and "async def main():" from template
     GET_EVERY_DELETABLE_TEMPLATE_CODE: /(?<=\(self\.on\_speed\_change\))[\r\n]+(^[\S\s*]*async def main\(\)\:)/gm,
     // Replace content in on_start method (Here digital.auto code comes in)
     FIND_BEGIN_OF_ON_START_METHOD: /[\t ]*async def on\_start\(self\)\:[\r\n]+([^\r\n]+)/gm,
+    FIND_VEHICLE_INIT: /self\.Vehicle \= vehicle_client/gm,
     FIND_VEHICLE_OCCURENCE: /vehicle/gm,
     FIND_UNWANTED_VEHICLE_CHANGE: /\(await self\.Vehicle/gm,
     FIND_PRINTF_STATEMENTS: /print\(f/gm,
