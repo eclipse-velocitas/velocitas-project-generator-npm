@@ -13,12 +13,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Buffer } from 'buffer';
+import { CreateCodeSnippetForTemplateStep } from './pipeline/create-code-snippet';
 import { ExtractClassesStep } from './pipeline/extract-classes';
 import { ExtractImportsStep } from './pipeline/extract-imports';
 import { ExtractMethodsStep } from './pipeline/extract-methods';
 import { ExtractVariablesStep } from './pipeline/extract-variables';
-import { CreateCodeSnippetForTemplateStep, IPipelineStep } from './pipeline/pipeline-base';
+import { IPipelineStep } from './pipeline/pipeline-base';
 import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
+
 import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { CONTENT_ENCODINGS } from './utils/constants';
 import { REGEX } from './utils/regex';
@@ -131,6 +133,7 @@ export class CodeFormatter {
             const newMainPy = extractedMainPyStructure
                 .replace(REGEX.FIND_BEGIN_OF_ON_START_METHOD, this.codeContext.codeSnippetForTemplate)
                 .replace(REGEX.FIND_VEHICLE_INIT, `self.Vehicle = vehicle_client\n${this.codeContext.memberVariables}`)
+                .replace(VELOCITAS.IMPORT_SUBSCRIBE_TOPIC, '')
                 .replace(REGEX.FIND_SAMPLE_APP, appNameForTemplate);
             return newMainPy;
         } catch (error) {
@@ -170,6 +173,9 @@ export class CodeFormatter {
                 (finalCode as string[])[index] = codeLine.replace('",', ': %s",');
             }
         });
+        if (!finalCode.some((line: string) => line.includes(VELOCITAS.CLASS_METHOD_SIGNATURE))) {
+            (finalCode as string[]).splice(finalCode.indexOf(VELOCITAS.IMPORT_DATAPOINT_REPLY), 1);
+        }
         const formattedFinalCode = this.createMultilineStringFromArray(finalCode);
         const encodedNewMainPy = Buffer.from(formattedFinalCode, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
             CONTENT_ENCODINGS.base64 as BufferEncoding
@@ -178,9 +184,16 @@ export class CodeFormatter {
     }
 
     private adaptToMqtt(mainPyStringArray: string[]) {
-        const setTextLines: string[] = mainPyStringArray.filter((line) => line.includes(DIGITAL_AUTO.SET_TEXT));
+        const setTextLines: string[] = mainPyStringArray.filter(
+            (line) => line.includes(DIGITAL_AUTO.NOTIFY) || line.includes(DIGITAL_AUTO.SET_TEXT)
+        );
         setTextLines.forEach((setTextLine: string) => {
-            const mqttTopic = setTextLine.split('.')[0].trim();
+            let mqttTopic: string;
+            if (setTextLine.includes(DIGITAL_AUTO.NOTIFY)) {
+                mqttTopic = setTextLine.split('.')[1].split('(')[0].trim();
+            } else {
+                mqttTopic = setTextLine.split('.')[0].trim();
+            }
             const mqttMessage = setTextLine.split('"')[1].trim();
             const mqttPublishLine = this.transformToMqttPublish(mqttTopic, mqttMessage);
             const spacesBeforeSetTextLine = new RegExp(`\\s(?=[^,]*${mqttTopic})`, 'g');

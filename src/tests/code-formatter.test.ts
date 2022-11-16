@@ -25,9 +25,9 @@ const expect = chai.expect;
 const APP_NAME = 'test';
 
 const EXAMPLE_INPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_input_1.py')}`, 'base64');
-const EXAMPLE_INPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_input_1.py')}`, 'base64');
+const EXAMPLE_INPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_input_2.py')}`, 'base64');
 const EXPECTED_OUTPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_output_1.py')}`, 'utf8');
-const EXPECTED_OUTPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_output_1.py')}`, 'utf8');
+const EXPECTED_OUTPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_output_2.py')}`, 'utf8');
 const VELOCITAS_TEMPLATE_MAINPY = readFileSync(`${path.join(__dirname, 'files/velocitas_template_main.py')}`, 'base64');
 
 describe('Code Formatter', () => {

@@ -32,10 +32,13 @@ export const VELOCITAS = {
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
     GET_VALUE: '.get()).value',
     IMPORT_TIME: 'import time',
+    IMPORT_SUBSCRIBE_TOPIC: ', subscribe_topic',
+    IMPORT_DATAPOINT_REPLY: 'from sdv.vdb.subscriptions import DataPointReply',
 };
 export const DIGITAL_AUTO = {
     VEHICLE_INIT: 'Vehicle()',
     SET_TEXT: 'set_text',
+    NOTIFY: 'notify',
     SUBSCRIBE_CALL: '.subscribe(',
     IMPORT_PLUGINS: 'import plugins',
 };
