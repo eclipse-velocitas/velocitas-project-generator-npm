@@ -13,15 +13,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Buffer } from 'buffer';
-import {
-    CreateCodeSnippetForTemplateStep,
-    ExtractClassesStep,
-    ExtractImportsStep,
-    ExtractMethodsStep,
-    ExtractVariablesStep,
-    IPipelineStep,
-    PrepareCodeSnippetStep,
-} from './pipeline';
+import { ExtractClassesStep } from './pipeline/extract-classes';
+import { ExtractImportsStep } from './pipeline/extract-imports';
+import { ExtractMethodsStep } from './pipeline/extract-methods';
+import { ExtractVariablesStep } from './pipeline/extract-variables';
+import { CreateCodeSnippetForTemplateStep, IPipelineStep } from './pipeline/pipeline-base';
+import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { CONTENT_ENCODINGS } from './utils/constants';
 import { REGEX } from './utils/regex';
