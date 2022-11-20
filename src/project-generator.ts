@@ -16,7 +16,7 @@ import axios from 'axios';
 import { Buffer } from 'buffer';
 import { ProjectGeneratorError } from './project-generator-error';
 import { StatusCodes } from 'http-status-codes';
-import { CodeFormatter } from './code-formatter';
+import { CodeConverter } from './code-converter';
 import {
     CONTENT_ENCODINGS,
     DEFAULT_COMMIT_MESSAGE,
@@ -37,7 +37,7 @@ import {
 export class ProjectGenerator {
     private repositoryPath;
     private requestConfig;
-    private codeFormatter: CodeFormatter = new CodeFormatter();
+    private codeConverter: CodeConverter = new CodeConverter();
     /**
      * Parameter will be used to call the GitHub API as follows:
      * https://api.github.com/repos/OWNER/REPO
@@ -189,8 +189,8 @@ export class ProjectGenerator {
         );
         const appManifestBlobSha = await this.createBlob(encodedUpdateContent);
         const mainPyContentData = await this.getFileContentData('main');
-        const formattedMainPy = this.codeFormatter.formatMainPy(mainPyContentData, codeSnippet, appName);
-        const mainPyBlobSha = await this.createBlob(formattedMainPy);
+        const convertedMainPy = this.codeConverter.convertMainPy(mainPyContentData, codeSnippet, appName);
+        const mainPyBlobSha = await this.createBlob(convertedMainPy);
         await this.updateTree(appManifestBlobSha, mainPyBlobSha);
     }
 

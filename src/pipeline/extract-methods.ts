@@ -1,14 +1,19 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { DIGITAL_AUTO, INDENTATION, PYTHON, VELOCITAS } from '../utils/codeConstants';
+import { createMultilineStringFromArray, indentCodeSnippet } from '../utils/helpers';
 import { PipelineStep } from './pipeline-base';
 
+/**
+ * Extracts methods from digital.auto prototype to the CodeContext
+ * @extends PipelineStep
+ */
 export class ExtractMethodsStep extends PipelineStep {
     public execute(context: CodeContext) {
         context.seperateMethodsArray = this.identifyMethodBlocks(context);
         if (context.seperateMethodsArray.length !== 0) {
-            context.seperateMethods = this.createMultilineStringFromArray(context.seperateMethodsArray as string[][]);
+            context.seperateMethods = createMultilineStringFromArray(context.seperateMethodsArray as string[][]);
             context.seperateMethods = this.adaptCodeBlocksToVelocitasStructure(context.seperateMethods);
-            context.seperateMethods = this.indentCodeSnippet(context.seperateMethods, INDENTATION.COUNT_CLASS);
+            context.seperateMethods = indentCodeSnippet(context.seperateMethods, INDENTATION.COUNT_CLASS);
         }
     }
     private identifyMethodBlocks(context: CodeContext): string[][] {
@@ -70,7 +75,7 @@ export class ExtractMethodsStep extends PipelineStep {
         }
         const callBackVariable = methodString.split(`(`)[1].split(`:`)[0].split(`)`)[0];
 
-        const subscriptionCallbackVariableLine = this.indentCodeSnippet(
+        const subscriptionCallbackVariableLine = indentCodeSnippet(
             `${callBackVariable} = data.get(${vssSignal}).value`,
             INDENTATION.COUNT_CLASS
         );

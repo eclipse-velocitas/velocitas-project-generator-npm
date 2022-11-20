@@ -79,22 +79,22 @@ const expectedIndentedOneLineOutput = '  DO NOT REPLACE DO NOT REPLACE';
 
 describe('Regex', () => {
     it('should find and replace multiline comments', async () => {
-        const formattedMultiline = multiline.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
-        const formattedIndentedMultiline = indentedMultiline.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedMultiline = multiline.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedIndentedMultiline = indentedMultiline.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
 
-        const formattedMultilineOneLine = multilineOneLine.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
-        const formattedIndentedMultilineOneLine = indentedMultilineOneLine.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedMultilineOneLine = multilineOneLine.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedIndentedMultilineOneLine = indentedMultilineOneLine.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
 
-        const formattedMultilineTwoLines = multilineTwoLines.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
-        const formattedIndentedMultilineTwoLines = indentedMultilineTwoLines.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedMultilineTwoLines = multilineTwoLines.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
+        const convertedIndentedMultilineTwoLines = indentedMultilineTwoLines.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
 
-        expect(formattedMultiline).to.be.equal(expectedMultilineOutput);
-        expect(formattedIndentedMultiline).to.be.equal(expectedIndentedMultilineOutput);
+        expect(convertedMultiline).to.be.equal(expectedMultilineOutput);
+        expect(convertedIndentedMultiline).to.be.equal(expectedIndentedMultilineOutput);
 
-        expect(formattedMultilineOneLine).to.be.equal(expectedOneLineOutput);
-        expect(formattedIndentedMultilineOneLine).to.be.equal(expectedIndentedOneLineOutput);
+        expect(convertedMultilineOneLine).to.be.equal(expectedOneLineOutput);
+        expect(convertedIndentedMultilineOneLine).to.be.equal(expectedIndentedOneLineOutput);
 
-        expect(formattedMultilineTwoLines).to.be.equal(expectedMultilineOutput);
-        expect(formattedIndentedMultilineTwoLines).to.be.equal(expectedIndentedMultilineOutput);
+        expect(convertedMultilineTwoLines).to.be.equal(expectedMultilineOutput);
+        expect(convertedIndentedMultilineTwoLines).to.be.equal(expectedIndentedMultilineOutput);
     });
 });

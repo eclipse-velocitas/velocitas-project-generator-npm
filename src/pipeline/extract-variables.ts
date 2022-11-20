@@ -1,7 +1,12 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { INDENTATION } from '../utils/codeConstants';
+import { createMultilineStringFromArray, indentCodeSnippet } from '../utils/helpers';
 import { PipelineStep } from './pipeline-base';
 
+/**
+ * Extracts variables from digital.auto prototype to the CodeContext
+ * @extends PipelineStep
+ */
 export class ExtractVariablesStep extends PipelineStep {
     public execute(context: CodeContext) {
         context.variablesArray = this.identifyVariables(context.codeSnippetStringArray);
@@ -57,7 +62,7 @@ export class ExtractVariablesStep extends PipelineStep {
         context.variableNames.forEach((variable: string) => {
             memberVariablesArray.push(`self.${variable.trim()} = None`);
         });
-        const memberVariables = this.indentCodeSnippet(this.createMultilineStringFromArray(memberVariablesArray), INDENTATION.COUNT_METHOD);
+        const memberVariables = indentCodeSnippet(createMultilineStringFromArray(memberVariablesArray), INDENTATION.COUNT_METHOD);
         return memberVariables;
     }
 }

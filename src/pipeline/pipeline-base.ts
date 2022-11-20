@@ -1,4 +1,4 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { VELOCITAS } from '../utils/codeConstants';
 import { REGEX } from '../utils/regex';
 
@@ -7,7 +7,14 @@ export interface IPipelineStep {
     cleanUpCodeSnippet(arrayToCleanUp: string[] | string[][], codeContext: CodeContext): void;
 }
 
+/**
+ * Base class for pipeline use case in code converter.
+ * To be used to extend the functionality for more detailed pipeline steps.
+ */
 export class PipelineStep implements IPipelineStep {
+    /**
+     * @param {CodeContext} context
+     */
     public execute(context: CodeContext): void {}
     cleanUpCodeSnippet(arrayToCleanUp: string[] | string[][], codeContext: CodeContext): void {
         if (arrayToCleanUp.length === 0) {
@@ -28,27 +35,6 @@ export class PipelineStep implements IPipelineStep {
                 codeContext.codeSnippetStringArray?.splice(codeContext.codeSnippetStringArray.indexOf(lineToRemove), 1);
             }
         });
-    }
-    indentCodeSnippet(decodedSnippet: string, indentCount: number): string {
-        const indent = ' ';
-        const indentedCodeSnippet = decodedSnippet.replace(REGEX.FIND_EVERY_LINE_START, indent.repeat(indentCount));
-        return indentedCodeSnippet;
-    }
-    createMultilineStringFromArray(array: string[] | string[][]): string {
-        let multilineString: string = '';
-        if (array[0].constructor === Array) {
-            (array as string[][]).forEach((stringArray: string[]) => {
-                stringArray.forEach((stringElement: string) => {
-                    multilineString = multilineString.concat(`${stringElement}\n`);
-                });
-                multilineString = multilineString.concat(`\n`);
-            });
-        } else {
-            (array as string[]).forEach((stringElement: string) => {
-                multilineString = multilineString.concat(`${stringElement}\n`);
-            });
-        }
-        return multilineString.trim();
     }
     adaptCodeBlocksToVelocitasStructure(codeBlock: string): string {
         return codeBlock

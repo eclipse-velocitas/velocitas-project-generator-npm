@@ -24,6 +24,7 @@ import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { CONTENT_ENCODINGS } from './utils/constants';
 import { REGEX } from './utils/regex';
+import { createArrayFromMultilineString, createMultilineStringFromArray, indentCodeSnippet } from './utils/helpers';
 
 export class CodeContext {
     basicImportsArray: string[] = [];
@@ -37,65 +38,50 @@ export class CodeContext {
     codeSnippetStringArray: string[] = [];
     codeSnippetForTemplate: string = '';
 }
-export class CodeFormatter {
-    private codeContext: CodeContext = {
-        basicImportsArray: [],
-        variablesArray: [],
-        variableNames: [],
-        memberVariables: '',
-        seperateClassesArray: [],
-        seperateClasses: '',
-        seperateMethodsArray: [],
-        seperateMethods: '',
-        codeSnippetStringArray: [],
-        codeSnippetForTemplate: '',
-    };
 
-    public formatMainPy(base64MainPyContentData: string, base64CodeSnippet: string, appName: string): string {
+/**
+ * Initialize a new `CodeConverter`.
+ *
+ * @return {CodeConverter} which is used to convert digital.auto prototype to a functioning velocitas structure.
+ * @public
+ */
+export class CodeConverter {
+    private codeContext: CodeContext = new CodeContext();
+
+    /**
+     * Converts main.py from digital.auto to velocitas structure.
+     * @param {string} base64MainPyContentData
+     * @param {string} base64CodeSnippet
+     * @param {string} appName
+     * @return {string} encodedNewMainPy
+     * @public
+     */
+    public convertMainPy(base64MainPyContentData: string, base64CodeSnippet: string, appName: string): string {
         try {
-            this.adaptCodeSnippet(base64CodeSnippet);
-            const extractedMainPyStructure = this.extractMainPyBaseStructure(base64MainPyContentData);
-            const formattedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure, appName);
-            const finalizedMainPy = this.finalizeMainPy(formattedMainPy);
-            return finalizedMainPy;
+            const decodedBase64CodeSnippet = Buffer.from(base64CodeSnippet, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
+                CONTENT_ENCODINGS.utf8 as BufferEncoding
+            );
+            this.adaptCodeSnippet(decodedBase64CodeSnippet);
+
+            const decodedMainPyContentData = Buffer.from(base64MainPyContentData, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
+                CONTENT_ENCODINGS.utf8 as BufferEncoding
+            );
+            const extractedMainPyStructure = this.extractMainPyBaseStructure(decodedMainPyContentData);
+
+            const convertedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure, appName);
+
+            const finalizedMainPy = this.finalizeMainPy(convertedMainPy);
+            const encodedNewMainPy = Buffer.from(finalizedMainPy, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
+                CONTENT_ENCODINGS.base64 as BufferEncoding
+            );
+            return encodedNewMainPy;
         } catch (error) {
             throw error;
         }
     }
 
-    private createMultilineStringFromArray(array: string[] | string[][]): string {
-        let multilineString: string = '';
-        if (array[0].constructor === Array) {
-            (array as string[][]).forEach((stringArray: string[]) => {
-                stringArray.forEach((stringElement: string) => {
-                    multilineString = multilineString.concat(`${stringElement}\n`);
-                });
-                multilineString = multilineString.concat(`\n`);
-            });
-        } else {
-            (array as string[]).forEach((stringElement: string) => {
-                multilineString = multilineString.concat(`${stringElement}\n`);
-            });
-        }
-        return multilineString.trim();
-    }
-
-    private createArrayFromMultilineString(multilineString: string): string[] {
-        return multilineString.split(/\r?\n/);
-    }
-
-    private indentCodeSnippet(decodedSnippet: string, indentCount: number): string {
-        const indent = ' ';
-        const indentedCodeSnippet = decodedSnippet.replace(REGEX.FIND_EVERY_LINE_START, indent.repeat(indentCount));
-        return indentedCodeSnippet;
-    }
-
-    private adaptCodeSnippet(base64CodeSnippet: string): void {
-        let decodedBase64CodeSnippet = Buffer.from(base64CodeSnippet, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
-            CONTENT_ENCODINGS.utf8 as BufferEncoding
-        );
-
-        this.codeContext.codeSnippetStringArray = this.createArrayFromMultilineString(decodedBase64CodeSnippet);
+    private adaptCodeSnippet(codeSnippet: string): void {
+        this.codeContext.codeSnippetStringArray = createArrayFromMultilineString(codeSnippet);
 
         const pipeline = new Array<IPipelineStep>();
 
@@ -109,12 +95,9 @@ export class CodeFormatter {
         pipeline.forEach((pipelineStep) => pipelineStep.execute(this.codeContext));
     }
 
-    private extractMainPyBaseStructure(base64MainPyContentData: string): string {
-        let decodedMainPyContentData = Buffer.from(base64MainPyContentData, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
-            CONTENT_ENCODINGS.utf8 as BufferEncoding
-        );
+    private extractMainPyBaseStructure(mainPyContentData: string): string {
         try {
-            const mainPyBaseStructure = decodedMainPyContentData
+            const mainPyBaseStructure = mainPyContentData
                 .replace(REGEX.FIND_GLOBAL_TOPIC_VARIABLES, `\n\n${this.codeContext.seperateClasses}\n\n${PYTHON.CLASS}`)
                 .replace(REGEX.GET_WHITESPACE_FOLLOWED_BY_COMMENTS, '')
                 .replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '')
@@ -143,7 +126,7 @@ export class CodeFormatter {
 
     private finalizeMainPy(newMainPy: string): string {
         let finalCode: string | string[];
-        finalCode = this.createArrayFromMultilineString(newMainPy);
+        finalCode = createArrayFromMultilineString(newMainPy);
         this.adaptToMqtt(finalCode);
         const firstLineOfImport = finalCode.find((element: string) => element.includes(PYTHON.IMPORT));
         this.codeContext.basicImportsArray?.forEach((basicImportString: string) => {
@@ -151,7 +134,7 @@ export class CodeFormatter {
                 (finalCode as string[]).splice(finalCode.indexOf(firstLineOfImport as string), 0, basicImportString);
             }
         });
-        finalCode = this.createMultilineStringFromArray(finalCode);
+        finalCode = createMultilineStringFromArray(finalCode);
         const tempCode = finalCode
             .replace(REGEX.FIND_SUBSCRIBE_METHOD_CALL, VELOCITAS.SUBSCRIPTION_SIGNATURE)
             .replace(/await await/gm, `${PYTHON.AWAIT}`)
@@ -159,7 +142,7 @@ export class CodeFormatter {
             .replace(REGEX.GET_EVERY_PLUGINS_USAGE, '')
             .replace(/await aio/gm, 'time');
 
-        finalCode = this.createArrayFromMultilineString(tempCode);
+        finalCode = createArrayFromMultilineString(tempCode);
 
         finalCode.forEach((codeLine: string, index) => {
             if (codeLine.includes(VELOCITAS.GET_VALUE)) {
@@ -176,11 +159,9 @@ export class CodeFormatter {
         if (!finalCode.some((line: string) => line.includes(VELOCITAS.CLASS_METHOD_SIGNATURE))) {
             (finalCode as string[]).splice(finalCode.indexOf(VELOCITAS.IMPORT_DATAPOINT_REPLY), 1);
         }
-        const formattedFinalCode = this.createMultilineStringFromArray(finalCode);
-        const encodedNewMainPy = Buffer.from(formattedFinalCode, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
-            CONTENT_ENCODINGS.base64 as BufferEncoding
-        );
-        return encodedNewMainPy;
+        const convertedFinalCode = createMultilineStringFromArray(finalCode);
+
+        return convertedFinalCode;
     }
 
     private adaptToMqtt(mainPyStringArray: string[]) {
@@ -198,7 +179,7 @@ export class CodeFormatter {
             const mqttPublishLine = this.transformToMqttPublish(mqttTopic, mqttMessage);
             const spacesBeforeSetTextLine = new RegExp(`\\s(?=[^,]*${mqttTopic})`, 'g');
             const spaceCountBeforeSetTextLine = setTextLine.length - setTextLine.replace(spacesBeforeSetTextLine, '').length;
-            const newMqttPublishLine = this.indentCodeSnippet(mqttPublishLine, spaceCountBeforeSetTextLine);
+            const newMqttPublishLine = indentCodeSnippet(mqttPublishLine, spaceCountBeforeSetTextLine);
             mainPyStringArray[mainPyStringArray.indexOf(setTextLine)] = newMqttPublishLine;
         });
         return mainPyStringArray;

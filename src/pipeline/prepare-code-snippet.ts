@@ -1,19 +1,23 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { DIGITAL_AUTO, PYTHON } from '../utils/codeConstants';
 import { PipelineStep } from './pipeline-base';
 
+/**
+ * Prepares digital.auto prototype code snippet to be used to extract all relevant and needed information.
+ * @extends PipelineStep
+ */
 export class PrepareCodeSnippetStep extends PipelineStep {
     public execute(context: CodeContext) {
-        context.codeSnippetStringArray = this.removeSubstringFromArray(context.codeSnippetStringArray, DIGITAL_AUTO.VEHICLE_INIT);
-        context.codeSnippetStringArray = this.removeSubstringFromArray(
+        context.codeSnippetStringArray = this.removeSubstringsFromArray(context.codeSnippetStringArray, DIGITAL_AUTO.VEHICLE_INIT);
+        context.codeSnippetStringArray = this.removeSubstringsFromArray(
             context.codeSnippetStringArray,
             PYTHON.IMPORT_DEPENDENCY_FROM,
             PYTHON.IMPORT
         );
-        context.codeSnippetStringArray = this.removeSubstringFromArray(context.codeSnippetStringArray, PYTHON.COMMENT);
+        context.codeSnippetStringArray = this.removeSubstringsFromArray(context.codeSnippetStringArray, PYTHON.COMMENT);
     }
 
-    private removeSubstringFromArray(array: string[], substringOne: string, substringTwo?: string): string[] {
+    private removeSubstringsFromArray(array: string[], substringOne: string, substringTwo?: string): string[] {
         const indexesToRemove: number[] = [];
         array.forEach((stringElement: string) => {
             if (!substringTwo && stringElement.includes(substringOne)) {

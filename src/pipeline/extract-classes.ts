@@ -1,14 +1,19 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { PYTHON } from '../utils/codeConstants';
 import { REGEX } from '../utils/regex';
+import { createMultilineStringFromArray } from '../utils/helpers';
 import { PipelineStep } from './pipeline-base';
 
+/**
+ * Extracts classes from digital.auto prototype to the CodeContext
+ * @extends PipelineStep
+ */
 export class ExtractClassesStep extends PipelineStep {
     public execute(context: CodeContext) {
         context.seperateClassesArray = this.identifySeperateClass(context);
         if (context.seperateClassesArray.length !== 0) {
             context.seperateClasses = this.adaptCodeBlocksToVelocitasStructure(
-                this.createMultilineStringFromArray(context.seperateClassesArray)
+                createMultilineStringFromArray(context.seperateClassesArray)
             );
         }
         this.cleanUpCodeSnippet(context.seperateClassesArray, context);

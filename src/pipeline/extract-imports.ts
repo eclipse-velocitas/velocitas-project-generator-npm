@@ -1,7 +1,11 @@
-import { CodeContext } from '../code-formatter';
+import { CodeContext } from '../code-converter';
 import { PYTHON, VELOCITAS } from '../utils/codeConstants';
 import { PipelineStep } from './pipeline-base';
 
+/**
+ * Extracts imports from digital.auto prototype to the CodeContext
+ * @extends PipelineStep
+ */
 export class ExtractImportsStep extends PipelineStep {
     public execute(context: CodeContext) {
         context.basicImportsArray = this.identifyBasicImports(context);

@@ -17,7 +17,7 @@ import * as path from 'path';
 
 import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { CodeFormatter } from '../code-formatter';
+import { CodeConverter } from '../code-converter';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -30,21 +30,21 @@ const EXPECTED_OUTPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_ou
 const EXPECTED_OUTPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_output_2.py')}`, 'utf8');
 const VELOCITAS_TEMPLATE_MAINPY = readFileSync(`${path.join(__dirname, 'files/velocitas_template_main.py')}`, 'base64');
 
-describe('Code Formatter', () => {
+describe('Code Converter', () => {
     it('should initialize', async () => {
-        const codeFormatter: CodeFormatter = new CodeFormatter();
-        expect(codeFormatter).to.be.instanceof(CodeFormatter);
+        const codeConverter: CodeConverter = new CodeConverter();
+        expect(codeConverter).to.be.instanceof(CodeConverter);
     });
     it('should format main.py correctly for example 1', async () => {
-        const codeFormatter: CodeFormatter = new CodeFormatter();
-        const formattedMainPy = codeFormatter.formatMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_1, APP_NAME);
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_1, APP_NAME);
         const encodedExpectedOutputMainPyContentData = Buffer.from(EXPECTED_OUTPUT_1.trim(), 'utf8').toString('base64');
-        expect(formattedMainPy).to.be.equal(encodedExpectedOutputMainPyContentData);
+        expect(convertedMainPy).to.be.equal(encodedExpectedOutputMainPyContentData);
     });
     it('should format main.py correctly for example 2', async () => {
-        const codeFormatter: CodeFormatter = new CodeFormatter();
-        const formattedMainPy = codeFormatter.formatMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
         const encodedExpectedOutputMainPyContentData = Buffer.from(EXPECTED_OUTPUT_2.trim(), 'utf8').toString('base64');
-        expect(formattedMainPy).to.be.equal(encodedExpectedOutputMainPyContentData);
+        expect(convertedMainPy).to.be.equal(encodedExpectedOutputMainPyContentData);
     });
 });
