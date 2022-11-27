@@ -30,7 +30,7 @@ export const createMultilineStringFromArray = (array: string[] | string[][]): st
 
 export const removeEmptyLines = (array: string[]): void => {
     const indexesToRemove = new Set<number>();
-    array.forEach((e: any, index: any) => {
+    array.forEach((e: string, index: number) => {
         if (e === '' && array[index + 1] === '') {
             if (!array[index + 2].includes(PYTHON.CLASS) && !array[index + 2].includes(VELOCITAS.EVENT_LOOP)) {
                 indexesToRemove.add(index);
