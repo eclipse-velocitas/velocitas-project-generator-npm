@@ -12,8 +12,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
-
 # pylint: disable=C0103, C0413, E1101
 
 import asyncio
@@ -36,9 +34,8 @@ logging.getLogger().setLevel("DEBUG")
 logger = logging.getLogger(__name__)
 
 
-
 class TestApp(VehicleApp):
-
+    """Velocitas App for test."""
 
     def __init__(self, vehicle_client: Vehicle):
         super().__init__()
@@ -52,7 +49,6 @@ class TestApp(VehicleApp):
     async def on_start(self):
         await self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition.subscribe(self.on_wiper_position_changed)
         logger.info("Wiper output Listener was registered")
-
 
         await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.subscribe(self.on_wiper_start)
 
@@ -105,7 +101,6 @@ class TestApp(VehicleApp):
             logger.info("Finished Movement")
 
 async def main():
-
 
     logger.info("Starting TestApp...")
     vehicle_app = TestApp(vehicle)

@@ -12,8 +12,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
-
 # pylint: disable=C0103, C0413, E1101
 
 import random
@@ -50,7 +48,7 @@ class Dog:
         ])
 
 class TestApp(VehicleApp):
-
+    """Velocitas App for test."""
 
     def __init__(self, vehicle_client: Vehicle):
         super().__init__()
@@ -66,7 +64,6 @@ class TestApp(VehicleApp):
         self.dog = Dog()
         self.dog_mood, self.dog_is_sad = dog.isSad()
 
-
         if dog_is_sad:
             await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.OPEN)
         else:
@@ -77,10 +74,7 @@ class TestApp(VehicleApp):
 
         logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
 
-
-
 async def main():
-
 
     logger.info("Starting TestApp...")
     vehicle_app = TestApp(vehicle)

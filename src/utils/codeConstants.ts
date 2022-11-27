@@ -31,9 +31,11 @@ export const VELOCITAS = {
     VEHICLE_CALL: 'await self.Vehicle',
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
     GET_VALUE: '.get()).value',
-    IMPORT_TIME: 'import time',
     IMPORT_SUBSCRIBE_TOPIC: ', subscribe_topic',
     IMPORT_DATAPOINT_REPLY: 'from sdv.vdb.subscriptions import DataPointReply',
+    EVENT_LOOP: 'LOOP',
+    VEHICLE_APP_SIGNATURE: '(VehicleApp):',
+    ASYNCIO: 'await asyncio',
 };
 export const DIGITAL_AUTO = {
     VEHICLE_INIT: 'Vehicle()',

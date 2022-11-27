@@ -21,12 +21,19 @@ import { ExtractVariablesStep } from './pipeline/extract-variables';
 import { IPipelineStep } from './pipeline/pipeline-base';
 import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 
-import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
+import { DIGITAL_AUTO, INDENTATION, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { CONTENT_ENCODINGS } from './utils/constants';
 import { REGEX } from './utils/regex';
-import { createArrayFromMultilineString, createMultilineStringFromArray, indentCodeSnippet } from './utils/helpers';
+import {
+    createArrayFromMultilineString,
+    createMultilineStringFromArray,
+    indentCodeSnippet,
+    insertClassDocString,
+    removeEmptyLines,
+} from './utils/helpers';
 
 export class CodeContext {
+    appName: string = '';
     basicImportsArray: string[] = [];
     variablesArray: string[][] = [];
     variableNames: string[] = [];
@@ -58,6 +65,7 @@ export class CodeConverter {
      */
     public convertMainPy(base64MainPyContentData: string, base64CodeSnippet: string, appName: string): string {
         try {
+            this.codeContext.appName = appName;
             const decodedBase64CodeSnippet = Buffer.from(base64CodeSnippet, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
                 CONTENT_ENCODINGS.utf8 as BufferEncoding
             );
@@ -68,7 +76,7 @@ export class CodeConverter {
             );
             const extractedMainPyStructure = this.extractMainPyBaseStructure(decodedMainPyContentData);
 
-            const convertedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure, appName);
+            const convertedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure);
 
             const finalizedMainPy = this.finalizeMainPy(convertedMainPy);
             const encodedNewMainPy = Buffer.from(finalizedMainPy, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
@@ -110,8 +118,10 @@ export class CodeConverter {
         }
     }
 
-    private addCodeSnippetToMainPy(extractedMainPyStructure: string, appName: string): string {
-        const appNameForTemplate = `${appName.charAt(0).toUpperCase()}${appName.slice(1)}${VELOCITAS.VEHICLE_APP_SUFFIX}`;
+    private addCodeSnippetToMainPy(extractedMainPyStructure: string): string {
+        const appNameForTemplate = `${this.codeContext.appName.charAt(0).toUpperCase()}${this.codeContext.appName.slice(1)}${
+            VELOCITAS.VEHICLE_APP_SUFFIX
+        }`;
         try {
             const newMainPy = extractedMainPyStructure
                 .replace(REGEX.FIND_BEGIN_OF_ON_START_METHOD, this.codeContext.codeSnippetForTemplate)
@@ -140,10 +150,10 @@ export class CodeConverter {
             .replace(/await await/gm, `${PYTHON.AWAIT}`)
             .replace(/\.get\(\)/gm, `${VELOCITAS.GET_VALUE}`)
             .replace(REGEX.GET_EVERY_PLUGINS_USAGE, '')
-            .replace(/await aio/gm, 'time');
+            .replace(/await aio/gm, VELOCITAS.ASYNCIO);
 
         finalCode = createArrayFromMultilineString(tempCode);
-
+        removeEmptyLines(finalCode);
         finalCode.forEach((codeLine: string, index) => {
             if (codeLine.includes(VELOCITAS.GET_VALUE)) {
                 if (codeLine.includes('{await')) {
@@ -159,6 +169,7 @@ export class CodeConverter {
         if (!finalCode.some((line: string) => line.includes(VELOCITAS.CLASS_METHOD_SIGNATURE))) {
             (finalCode as string[]).splice(finalCode.indexOf(VELOCITAS.IMPORT_DATAPOINT_REPLY), 1);
         }
+        insertClassDocString(finalCode, this.codeContext.appName);
         const convertedFinalCode = createMultilineStringFromArray(finalCode);
 
         return convertedFinalCode;
@@ -186,7 +197,10 @@ export class CodeConverter {
     }
 
     private transformToMqttPublish(mqttTopic: string, mqttMessage: string): string {
-        const mqttPublish = `await self.publish_mqtt_event("${mqttTopic}", json.dumps({"result": {"message": f"""${mqttMessage}"""}}))`;
+        let mqttPublish: string = `await self.publish_mqtt_event("${mqttTopic}", json.dumps({"result": {"message": """${mqttMessage}"""}}))`;
+        if (mqttMessage.includes('{')) {
+            mqttPublish = `await self.publish_mqtt_event("${mqttTopic}", json.dumps({"result": {"message": f"""${mqttMessage}"""}}))`;
+        }
         return mqttPublish;
     }
 }

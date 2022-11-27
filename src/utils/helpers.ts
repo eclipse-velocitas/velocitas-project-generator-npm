@@ -1,3 +1,4 @@
+import { INDENTATION, PYTHON, VELOCITAS } from './codeConstants';
 import { REGEX } from './regex';
 
 export const indentCodeSnippet = (decodedSnippet: string, indentCount: number): string => {
@@ -25,4 +26,29 @@ export const createMultilineStringFromArray = (array: string[] | string[][]): st
         });
     }
     return multilineString.trim();
+};
+
+export const removeEmptyLines = (array: string[]): void => {
+    const indexesToRemove = new Set<number>();
+    array.forEach((e: any, index: any) => {
+        if (e === '' && array[index + 1] === '') {
+            if (!array[index + 2].includes(PYTHON.CLASS) && !array[index + 2].includes(VELOCITAS.EVENT_LOOP)) {
+                indexesToRemove.add(index);
+            }
+        }
+    });
+    let indexCountToSubtract: number = 0;
+    for (const index of indexesToRemove.values()) {
+        array.splice(index - indexCountToSubtract, 1);
+        indexCountToSubtract++;
+    }
+};
+
+export const insertClassDocString = (array: string[], appName: string): void => {
+    const vehicleAppClassLine: string = array.find((line: string) => line.includes(VELOCITAS.VEHICLE_APP_SIGNATURE))!;
+    array.splice(
+        array.indexOf(vehicleAppClassLine) + 1,
+        0,
+        indentCodeSnippet(`"""Velocitas App for ${appName}."""`, INDENTATION.COUNT_CLASS)
+    );
 };
