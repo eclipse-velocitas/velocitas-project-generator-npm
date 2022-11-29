@@ -153,7 +153,7 @@ export class CodeConverter {
             .replace(/await aio/gm, VELOCITAS.ASYNCIO);
 
         finalCode = createArrayFromMultilineString(tempCode);
-        removeEmptyLines(finalCode);
+        finalCode = removeEmptyLines(finalCode);
         finalCode.forEach((codeLine: string, index) => {
             if (codeLine.includes(VELOCITAS.GET_VALUE)) {
                 if (codeLine.includes('{await')) {
@@ -199,6 +199,10 @@ export class CodeConverter {
     private transformToMqttPublish(mqttTopic: string, mqttMessage: string): string {
         let mqttPublish: string = `await self.publish_mqtt_event("${mqttTopic}", json.dumps({"result": {"message": """${mqttMessage}"""}}))`;
         if (mqttMessage.includes('{')) {
+            const variableInMqttMessage = this.codeContext.variableNames.find((variable: string) => mqttMessage.includes(variable));
+            if (variableInMqttMessage) {
+                mqttMessage = mqttMessage.replace(variableInMqttMessage, `self.${variableInMqttMessage}`);
+            }
             mqttPublish = `await self.publish_mqtt_event("${mqttTopic}", json.dumps({"result": {"message": f"""${mqttMessage}"""}}))`;
         }
         return mqttPublish;

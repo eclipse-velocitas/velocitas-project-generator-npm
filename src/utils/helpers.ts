@@ -28,7 +28,7 @@ export const createMultilineStringFromArray = (array: string[] | string[][]): st
     return multilineString.trim();
 };
 
-export const removeEmptyLines = (array: string[]): void => {
+export const removeEmptyLines = (array: string[]): string[] => {
     const indexesToRemove = new Set<number>();
     array.forEach((e: string, index: number) => {
         if (e === '' && array[index + 1] === '') {
@@ -37,11 +37,8 @@ export const removeEmptyLines = (array: string[]): void => {
             }
         }
     });
-    let indexCountToSubtract: number = 0;
-    for (const index of indexesToRemove.values()) {
-        array.splice(index - indexCountToSubtract, 1);
-        indexCountToSubtract++;
-    }
+    const arrayWithoutEmtpyLines = array.filter((_element, index) => !indexesToRemove.has(index));
+    return arrayWithoutEmtpyLines;
 };
 
 export const insertClassDocString = (array: string[], appName: string): void => {

@@ -70,7 +70,7 @@ class TestApp(VehicleApp):
             await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.CLOSE)
 
         logger.info("INFO: 	 Is dog sad? {dog_is_sad}")
-        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""}}))
+        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {self.dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""}}))
 
         logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
 
