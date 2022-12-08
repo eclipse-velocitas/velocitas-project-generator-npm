@@ -108,10 +108,10 @@ export class CodeConverter {
             let tempContent: string | string[];
             tempContent = createArrayFromMultilineString(mainPyContentData);
             tempContent = tempContent.filter((line) => {
-                if (line.includes(' # ') && !line.includes('# type')) {
+                if (line.includes(` ${PYTHON.COMMENT} `) && !line.includes(VELOCITAS.TYPE_IGNORE)) {
                     return false;
                 }
-                if (!line.includes('_TOPIC =')) {
+                if (!line.includes(VELOCITAS.PREDEFINED_TOPIC)) {
                     return true;
                 }
             });
@@ -121,7 +121,7 @@ export class CodeConverter {
                 tempContent.splice(tempContent.indexOf('class SampleApp(VehicleApp):') - 1, 0, ...classesArray);
             }
 
-            const topPartOfTemplate = tempContent.slice(0, tempContent.indexOf('    async def on_start(self):') + 1);
+            const topPartOfTemplate = tempContent.slice(0, tempContent.indexOf(`    ${VELOCITAS.ON_START}`) + 1);
             const bottomPartOfTemplate = tempContent.slice(tempContent.indexOf(VELOCITAS.MAIN_METHOD) - 1, tempContent.length);
             const methodsArray = createArrayFromMultilineString(this.codeContext.seperateMethods);
             if (methodsArray.length > 1) {

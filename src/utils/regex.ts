@@ -12,6 +12,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// NOTE: since safari doesn't support lookbehind regex yet. Try to avoid it.
+// https://caniuse.com/js-regexp-lookbehind
 export const REGEX = {
     // Everything between multiline comment from template
     EVERYTHING_BETWEEN_MULTILINE: /([^\S\r\n]*\"\"\"[\s\S]*?\"\"\")/gm,

@@ -36,6 +36,8 @@ export const VELOCITAS = {
     EVENT_LOOP: 'LOOP',
     VEHICLE_APP_SIGNATURE: '(VehicleApp):',
     ASYNCIO: 'await asyncio',
+    PREDEFINED_TOPIC: '_TOPIC =',
+    TYPE_IGNORE: '# type',
 };
 export const DIGITAL_AUTO = {
     VEHICLE_INIT: 'Vehicle()',
