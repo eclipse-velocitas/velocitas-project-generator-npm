@@ -100,6 +100,7 @@ class TestApp(VehicleApp):
                 self.ActualPosition += self.steps
             logger.info("Finished Movement")
 
+
 async def main():
 
     logger.info("Starting TestApp...")

@@ -32,7 +32,11 @@ export const removeEmptyLines = (array: string[]): string[] => {
     const indexesToRemove = new Set<number>();
     array.forEach((e: string, index: number) => {
         if (e === '' && array[index + 1] === '') {
-            if (!array[index + 2].includes(PYTHON.CLASS) && !array[index + 2].includes(VELOCITAS.EVENT_LOOP)) {
+            if (
+                !array[index + 2].includes(PYTHON.CLASS) &&
+                !array[index + 2].includes(VELOCITAS.EVENT_LOOP) &&
+                !array[index + 2].includes(VELOCITAS.MAIN_METHOD)
+            ) {
                 indexesToRemove.add(index);
             }
         }

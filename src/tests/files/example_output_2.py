@@ -33,6 +33,7 @@ logging.basicConfig(format=get_opentelemetry_log_format())
 logging.getLogger().setLevel("DEBUG")
 logger = logging.getLogger(__name__)
 
+
 class Dog:
     def isSad(self):
         l_mood = self.mood()
@@ -73,6 +74,7 @@ class TestApp(VehicleApp):
         await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {self.dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""}}))
 
         logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
+
 
 async def main():
 

@@ -105,12 +105,33 @@ export class CodeConverter {
 
     private extractMainPyBaseStructure(mainPyContentData: string): string {
         try {
-            const mainPyBaseStructure = mainPyContentData
-                .replace(REGEX.FIND_GLOBAL_TOPIC_VARIABLES, `\n\n${this.codeContext.seperateClasses}\n\n${PYTHON.CLASS}`)
-                .replace(REGEX.GET_WHITESPACE_FOLLOWED_BY_COMMENTS, '')
-                .replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '')
-                .replace(REGEX.GET_EVERY_PYTHON_DOCSTRING, '')
-                .replace(REGEX.GET_EVERY_DELETABLE_TEMPLATE_CODE, `\n\n${this.codeContext.seperateMethods}\n\n${VELOCITAS.MAIN_METHOD}`);
+            let tempContent: string | string[];
+            tempContent = createArrayFromMultilineString(mainPyContentData);
+            tempContent = tempContent.filter((line) => {
+                if (line.includes(' # ') && !line.includes('# type')) {
+                    return false;
+                }
+                if (!line.includes('_TOPIC =')) {
+                    return true;
+                }
+            });
+
+            const classesArray = createArrayFromMultilineString(this.codeContext.seperateClasses);
+            if (classesArray.length > 0) {
+                tempContent.splice(tempContent.indexOf('class SampleApp(VehicleApp):') - 1, 0, ...classesArray);
+            }
+
+            const topPartOfTemplate = tempContent.slice(0, tempContent.indexOf('    async def on_start(self):') + 1);
+            const bottomPartOfTemplate = tempContent.slice(tempContent.indexOf(VELOCITAS.MAIN_METHOD) - 1, tempContent.length);
+            const methodsArray = createArrayFromMultilineString(this.codeContext.seperateMethods);
+            if (methodsArray.length > 1) {
+                methodsArray.unshift('');
+                methodsArray.push('');
+            }
+            tempContent = topPartOfTemplate.concat(methodsArray).concat(bottomPartOfTemplate);
+            tempContent = createMultilineStringFromArray(tempContent);
+
+            const mainPyBaseStructure = tempContent.replace(REGEX.EVERYTHING_BETWEEN_MULTILINE, '');
 
             return mainPyBaseStructure;
         } catch (error) {
@@ -124,7 +145,7 @@ export class CodeConverter {
         }`;
         try {
             const newMainPy = extractedMainPyStructure
-                .replace(REGEX.FIND_BEGIN_OF_ON_START_METHOD, this.codeContext.codeSnippetForTemplate)
+                .replace(REGEX.FIND_BEGIN_OF_ON_START_METHOD, `${this.codeContext.codeSnippetForTemplate}\n`)
                 .replace(REGEX.FIND_VEHICLE_INIT, `self.Vehicle = vehicle_client\n${this.codeContext.memberVariables}`)
                 .replace(VELOCITAS.IMPORT_SUBSCRIBE_TOPIC, '')
                 .replace(REGEX.FIND_SAMPLE_APP, appNameForTemplate);
