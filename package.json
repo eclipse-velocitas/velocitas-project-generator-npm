@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "mocha --reporter spec --require ts-node/register src/**/*.test.ts"
+    "test": "mocha --timeout 10000 --reporter spec --require ts-node/register src/**/*.test.ts"
   },
   "author": "",
   "license": "Apache-2.0",
