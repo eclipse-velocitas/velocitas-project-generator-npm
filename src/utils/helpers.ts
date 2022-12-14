@@ -54,3 +54,7 @@ export const insertClassDocString = (array: string[], appName: string): void => 
         indentCodeSnippet(`"""Velocitas App for ${appName}."""`, INDENTATION.COUNT_CLASS)
     );
 };
+
+export const delay = (ms: number) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+};

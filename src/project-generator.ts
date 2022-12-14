@@ -25,7 +25,9 @@ import {
     GIT_DATA_MODES,
     GIT_DATA_TYPES,
     PYTHON_TEMPLATE_URL,
+    MS_TO_WAIT_FOR_GITHUB,
 } from './utils/constants';
+import { delay } from './utils/helpers';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
@@ -59,10 +61,6 @@ export class ProjectGenerator {
         this.repositoryPath = `${GITHUB_API_URL}/${this.owner}/${this.repo}`;
     }
 
-    private delay(ms: number) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
@@ -73,7 +71,7 @@ export class ProjectGenerator {
             await this.generateRepo();
             // Delay is introduced to make sure that the git API creates
             // everything we need before doing other API requests
-            await this.delay(5000);
+            await delay(MS_TO_WAIT_FOR_GITHUB);
             await this.updateContent(appName, codeSnippet);
             return StatusCodes.OK;
         } catch (error) {
@@ -174,7 +172,7 @@ export class ProjectGenerator {
             const newTreeSha = await this.createNewTreeSha(sha1, sha2, baseTreeSha);
             const mainBranchSha = await this.getMainBranchSha();
             const newCommitSha = await this.createCommitSha(mainBranchSha, newTreeSha);
-            await this.delay(4000);
+            await delay(MS_TO_WAIT_FOR_GITHUB);
             await this.setWorkflowPermission(true);
             await this.updateMainBranchSha(newCommitSha);
             return StatusCodes.OK;
