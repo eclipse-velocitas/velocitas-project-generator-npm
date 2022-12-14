@@ -59,6 +59,10 @@ export class ProjectGenerator {
         this.repositoryPath = `${GITHUB_API_URL}/${this.owner}/${this.repo}`;
     }
 
+    private delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
@@ -67,6 +71,9 @@ export class ProjectGenerator {
     public async run(codeSnippet: string, appName: string): Promise<number> {
         try {
             await this.generateRepo();
+            // Delay is introduced to make sure that the git API creates
+            // everything we need before doing other API requests
+            await this.delay(5000);
             await this.updateContent(appName, codeSnippet);
             return StatusCodes.OK;
         } catch (error) {
@@ -167,6 +174,7 @@ export class ProjectGenerator {
             const newTreeSha = await this.createNewTreeSha(sha1, sha2, baseTreeSha);
             const mainBranchSha = await this.getMainBranchSha();
             const newCommitSha = await this.createCommitSha(mainBranchSha, newTreeSha);
+            await this.delay(4000);
             await this.setWorkflowPermission(true);
             await this.updateMainBranchSha(newCommitSha);
             return StatusCodes.OK;
