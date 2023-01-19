@@ -100,7 +100,7 @@ export class ProjectGenerator {
             }
         }
         const responseStatus = await this.checkRepoAvailability();
-        await this.setWorkflowPermission(false);
+        await this.enableWorkflows(false);
         return responseStatus;
     }
 
@@ -129,7 +129,7 @@ export class ProjectGenerator {
         return responseStatus;
     }
 
-    private async setWorkflowPermission(isEnabled: boolean): Promise<boolean> {
+    private async enableWorkflows(isEnabled: boolean): Promise<boolean> {
         try {
             await axios.put(
                 `${this.repositoryPath}/actions/permissions`,
@@ -138,6 +138,22 @@ export class ProjectGenerator {
                 },
                 this.requestConfig
             );
+            return true;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    }
+
+    private async setDefaultWorkflowPermissionToWrite(): Promise<boolean> {
+        try {
+            await axios.put(
+                `${this.repositoryPath}/actions/permissions/workflow`,
+                {
+                    default_workflow_permissions: 'write',
+                },
+                this.requestConfig
+                );
             return true;
         } catch (error) {
             console.log(error);
@@ -173,7 +189,8 @@ export class ProjectGenerator {
             const mainBranchSha = await this.getMainBranchSha();
             const newCommitSha = await this.createCommitSha(mainBranchSha, newTreeSha);
             await delay(MS_TO_WAIT_FOR_GITHUB);
-            await this.setWorkflowPermission(true);
+            await this.setDefaultWorkflowPermissionToWrite();
+            await this.enableWorkflows(true);
             await this.updateMainBranchSha(newCommitSha);
             return StatusCodes.OK;
         } catch (error) {
