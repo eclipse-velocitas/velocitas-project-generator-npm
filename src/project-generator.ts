@@ -65,7 +65,7 @@ export class ProjectGenerator {
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
-     * @param {string} appName Root URI of Vspec Files.
+     * @param {string} vspecUri Root URI of Vspec Files.
      * @throws {ProjectGeneratorError}
      */
     public async runWithUri(codeSnippet: string, appName: string, vspecUri: string): Promise<number> {
