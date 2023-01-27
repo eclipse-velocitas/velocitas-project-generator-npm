@@ -50,15 +50,16 @@ describe('Project Generator', () => {
             .get('/git/refs/heads/main')
             .reply(200, { object: { sha: MOCK_SHA } });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/commits').reply(200, { sha: MOCK_SHA });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).put('/actions/permissions/workflow').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
 
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        const response = await generator.run(BASE64_CODE_SNIPPET, APP_NAME);
+        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, 'test');
         expect(response).to.be.equal(200);
     });
     it('should throw an error on repository generation', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(422);
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        await expect(generator.run(BASE64_CODE_SNIPPET, APP_NAME)).to.eventually.be.rejectedWith(Error);
+        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, 'test')).to.eventually.be.rejectedWith(Error);
     });
 });

@@ -1,4 +1,5 @@
 import { INDENTATION, PYTHON, VELOCITAS } from './codeConstants';
+import { CONTENT_ENCODINGS } from './constants';
 import { REGEX } from './regex';
 
 export const indentCodeSnippet = (decodedSnippet: string, indentCount: number): string => {
@@ -58,3 +59,8 @@ export const insertClassDocString = (array: string[], appName: string): void => 
 export const delay = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 };
+
+export const decode = (string: string) =>
+    Buffer.from(string, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(CONTENT_ENCODINGS.utf8 as BufferEncoding);
+export const encode = (string: string) =>
+    Buffer.from(string, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(CONTENT_ENCODINGS.base64 as BufferEncoding);

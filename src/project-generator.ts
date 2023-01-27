@@ -12,22 +12,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios from 'axios';
-import { Buffer } from 'buffer';
-import { ProjectGeneratorError } from './project-generator-error';
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter } from './code-converter';
-import {
-    CONTENT_ENCODINGS,
-    DEFAULT_COMMIT_MESSAGE,
-    DEFAULT_REPOSITORY_DESCRIPTION,
-    GITHUB_API_URL,
-    GIT_DATA_MODES,
-    GIT_DATA_TYPES,
-    PYTHON_TEMPLATE_URL,
-    MS_TO_WAIT_FOR_GITHUB,
-} from './utils/constants';
-import { delay } from './utils/helpers';
+import { MS_TO_WAIT_FOR_GITHUB } from './utils/constants';
+import { decode, delay, encode } from './utils/helpers';
+import { GitRequestHandler } from './gitRequestHandler';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
@@ -37,8 +26,7 @@ import { delay } from './utils/helpers';
  * @public
  */
 export class ProjectGenerator {
-    private repositoryPath;
-    private requestConfig;
+    private gitRequestHandler: GitRequestHandler;
     private codeConverter: CodeConverter = new CodeConverter();
     /**
      * Parameter will be used to call the GitHub API as follows:
@@ -51,266 +39,97 @@ export class ProjectGenerator {
      * @param {string} authToken as PAT or Oauth Token
      */
     constructor(private owner: string, private repo: string, private authToken: string) {
-        this.requestConfig = {
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/vnd.github+json',
-                Authorization: `Bearer ${this.authToken}`,
-            },
-        };
-        this.repositoryPath = `${GITHUB_API_URL}/${this.owner}/${this.repo}`;
+        this.gitRequestHandler = new GitRequestHandler(this.owner, this.repo, this.authToken);
     }
 
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
+     * @param {string} vspecPayload Base64 encoded Vspec payload.
      * @throws {ProjectGeneratorError}
      */
-    public async run(codeSnippet: string, appName: string): Promise<number> {
+    public async runWithPayload(codeSnippet: string, appName: string, vspecPayload: string): Promise<number> {
         try {
-            await this.generateRepo();
+            let decodedVspecPayload = JSON.parse(decode(vspecPayload));
+            await this.gitRequestHandler.generateRepo();
             // Delay is introduced to make sure that the git API creates
             // everything we need before doing other API requests
             await delay(MS_TO_WAIT_FOR_GITHUB);
-            await this.updateContent(appName, codeSnippet);
+            await this.updateContent(appName, codeSnippet, decodedVspecPayload);
             return StatusCodes.OK;
         } catch (error) {
             throw error;
         }
     }
 
-    private async generateRepo(): Promise<number> {
+    /**
+     * @param {string} codeSnippet Base64 encoded playground code snippet.
+     * @param {string} appName Name of the VehicleApp.
+     * @param {string} appName Root URI of Vspec Files.
+     * @throws {ProjectGeneratorError}
+     */
+    public async runWithUri(codeSnippet: string, appName: string, vspecUri: string): Promise<number> {
         try {
-            await axios.post(
-                `${PYTHON_TEMPLATE_URL}/generate`,
-                {
-                    owner: this.owner,
-                    name: this.repo,
-                    description: DEFAULT_REPOSITORY_DESCRIPTION,
-                    include_all_branches: false,
-                    private: true,
-                },
-                this.requestConfig
-            );
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new ProjectGeneratorError(error);
-            } else {
-                throw error;
-            }
-        }
-        const responseStatus = await this.checkRepoAvailability();
-        await this.enableWorkflows(false);
-        return responseStatus;
-    }
-
-    private async checkRepoAvailability(): Promise<number> {
-        let retries = 0;
-        let success = false;
-        let responseStatus: StatusCodes = StatusCodes.INTERNAL_SERVER_ERROR;
-        const maxRetries = 20;
-
-        while (retries < maxRetries && !success) {
-            try {
-                const response = await axios.get(`${this.repositoryPath}/contents`, this.requestConfig);
-                responseStatus = response.status;
-                success = true;
-                return responseStatus;
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.log(`Check #${retries + 1} if Repository is generated failed. Retrying.`);
-                    responseStatus = error.response?.status as number;
-                } else {
-                    throw error;
-                }
-            }
-            retries++;
-        }
-        return responseStatus;
-    }
-
-    private async enableWorkflows(isEnabled: boolean): Promise<boolean> {
-        try {
-            await axios.put(
-                `${this.repositoryPath}/actions/permissions`,
-                {
-                    enabled: isEnabled,
-                },
-                this.requestConfig
-            );
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
-
-    private async setDefaultWorkflowPermissionToWrite(): Promise<boolean> {
-        try {
-            await axios.put(
-                `${this.repositoryPath}/actions/permissions/workflow`,
-                {
-                    default_workflow_permissions: 'write',
-                },
-                this.requestConfig
-                );
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
-
-    private async createBlob(fileContent: string): Promise<string> {
-        try {
-            const response = await axios.post(
-                `${this.repositoryPath}/git/blobs`,
-                {
-                    content: fileContent,
-                    encoding: CONTENT_ENCODINGS.base64,
-                },
-                this.requestConfig
-            );
-            const blobSha = response.data.sha;
-            return blobSha;
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new ProjectGeneratorError(error);
-            } else {
-                throw error;
-            }
-        }
-    }
-
-    private async updateTree(sha1: string, sha2: string): Promise<any> {
-        try {
-            const baseTreeSha = await this.getBaseTreeSha();
-            const newTreeSha = await this.createNewTreeSha(sha1, sha2, baseTreeSha);
-            const mainBranchSha = await this.getMainBranchSha();
-            const newCommitSha = await this.createCommitSha(mainBranchSha, newTreeSha);
+            let decodedVspecString = decode(vspecUri);
+            await this.gitRequestHandler.generateRepo();
+            // Delay is introduced to make sure that the git API creates
+            // everything we need before doing other API requests
             await delay(MS_TO_WAIT_FOR_GITHUB);
-            await this.setDefaultWorkflowPermissionToWrite();
-            await this.enableWorkflows(true);
-            await this.updateMainBranchSha(newCommitSha);
+            await this.updateContent(appName, codeSnippet, decodedVspecString);
             return StatusCodes.OK;
         } catch (error) {
-            console.log(error);
+            throw error;
         }
     }
 
-    private async updateContent(appName: string, codeSnippet: string): Promise<any> {
-        const appManifestContentData = await this.getFileContentData('AppManifest');
-        let decodedContent = JSON.parse(
-            Buffer.from(appManifestContentData, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
-                CONTENT_ENCODINGS.utf8 as BufferEncoding
-            )
-        );
-        decodedContent[0].Name = appName.toLowerCase();
-        const updateContentString = JSON.stringify(decodedContent, null, 4);
-        const encodedUpdateContent = Buffer.from(updateContentString, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
-            CONTENT_ENCODINGS.base64 as BufferEncoding
-        );
-        const appManifestBlobSha = await this.createBlob(encodedUpdateContent);
-        const mainPyContentData = await this.getFileContentData('main');
-        const convertedMainPy = this.codeConverter.convertMainPy(mainPyContentData, codeSnippet, appName);
-        const mainPyBlobSha = await this.createBlob(convertedMainPy);
-        await this.updateTree(appManifestBlobSha, mainPyBlobSha);
+    private async updateContent(appName: string, codeSnippet: string, vspec: string): Promise<number> {
+        let vspecJsonBlobSha: string = '';
+
+        const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspec);
+        const mainPyBlobSha = await this.getNewMainPySha(appName, codeSnippet);
+
+        if (this.vspecIsPayload(vspec)) {
+            const encodedVspec = encode(`${JSON.stringify(vspec, null, 4)}\n`);
+            vspecJsonBlobSha = await this.gitRequestHandler.createBlob(encodedVspec);
+        }
+
+        await this.gitRequestHandler.updateTree(appManifestBlobSha, mainPyBlobSha, vspecJsonBlobSha);
+        return StatusCodes.OK;
     }
 
-    private async getFileContentData(file: string): Promise<string> {
-        let fileContentResponse;
-        if (file === 'AppManifest') {
-            fileContentResponse = await axios.get(`${this.repositoryPath}/contents/app/AppManifest.json`, this.requestConfig);
-        } else if (file === 'main') {
-            fileContentResponse = await axios.get(`${this.repositoryPath}/contents/app/src/main.py`, this.requestConfig);
+    private async getNewAppManifestSha(appName: string, vspec: string): Promise<string> {
+        const appManifestContentData = await this.gitRequestHandler.getFileContentData('AppManifest');
+        let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
+        decodedAppManifestContent[0].Name = appName.toLowerCase();
+
+        if (this.vspecIsPayload(vspec)) {
+            decodedAppManifestContent[0].vspec = './app/vspec.json';
         } else {
-            throw new Error();
+            decodedAppManifestContent[0].vspec = vspec;
         }
-        const fileContentData = fileContentResponse.data.content;
-        return fileContentData;
+
+        const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
+        const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
+        return appManifestBlobSha;
     }
 
-    private async getBaseTreeSha(): Promise<string> {
-        try {
-            const response = await axios.get(`${this.repositoryPath}/git/trees/main`, this.requestConfig);
-            const baseTreeSha = response.data.sha;
-            return baseTreeSha;
-        } catch (error) {
-            throw error;
-        }
+    private async getNewMainPySha(appName: string, codeSnippet: string): Promise<string> {
+        const mainPyContentData = await this.gitRequestHandler.getFileContentData('main');
+        const decodedMainPyContentData = decode(mainPyContentData);
+        const decodedBase64CodeSnippet = decode(codeSnippet);
+        const convertedMainPy = this.codeConverter.convertMainPy(decodedMainPyContentData, decodedBase64CodeSnippet, appName);
+        const encodedConvertedMainPy = encode(`${convertedMainPy}\n`);
+        const mainPyBlobSha = await this.gitRequestHandler.createBlob(encodedConvertedMainPy);
+        return mainPyBlobSha;
     }
 
-    private async createNewTreeSha(blobSha1: string, blobSha2: string, baseTreeSha: string): Promise<string> {
-        try {
-            const response = await axios.post(
-                `${this.repositoryPath}/git/trees`,
-                {
-                    tree: [
-                        {
-                            path: 'app/AppManifest.json',
-                            mode: GIT_DATA_MODES.fileBlob,
-                            type: GIT_DATA_TYPES.blob,
-                            sha: blobSha1,
-                        },
-                        {
-                            path: 'app/src/main.py',
-                            mode: GIT_DATA_MODES.fileBlob,
-                            type: GIT_DATA_TYPES.blob,
-                            sha: blobSha2,
-                        },
-                    ],
-                    base_tree: baseTreeSha,
-                },
-                this.requestConfig
-            );
-            const newTreeSha = response.data.sha;
-            return newTreeSha;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    private async getMainBranchSha(): Promise<string> {
-        try {
-            const response = await axios.get(`${this.repositoryPath}/git/refs/heads/main`, this.requestConfig);
-            const mainBranchSha = response.data.object.sha;
-            return mainBranchSha;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    private async createCommitSha(mainBranchSha: string, newTreeSha: string): Promise<string> {
-        try {
-            const response = await axios.post(
-                `${this.repositoryPath}/git/commits`,
-                {
-                    tree: newTreeSha,
-                    message: DEFAULT_COMMIT_MESSAGE,
-                    parents: [mainBranchSha],
-                },
-                this.requestConfig
-            );
-            const commitSha = response.data.sha;
-            return commitSha;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    private async updateMainBranchSha(newCommitSha: string): Promise<any> {
-        try {
-            const response = await axios.patch(
-                `${this.repositoryPath}/git/refs/heads/main`,
-                {
-                    sha: newCommitSha,
-                },
-                this.requestConfig
-            );
-            const patchResponse = response.data;
-            return patchResponse;
-        } catch (error) {
-            throw error;
+    private vspecIsPayload(vspec: string): boolean {
+        if (typeof vspec === 'string') {
+            return false;
+        } else if (typeof vspec === 'object') {
+            return true;
+        } else {
+            throw new Error('Provided Vspec information is faulty');
         }
     }
 }

@@ -12,7 +12,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Buffer } from 'buffer';
 import { CreateCodeSnippetForTemplateStep } from './pipeline/create-code-snippet';
 import { ExtractClassesStep } from './pipeline/extract-classes';
 import { ExtractImportsStep } from './pipeline/extract-imports';
@@ -21,8 +20,7 @@ import { ExtractVariablesStep } from './pipeline/extract-variables';
 import { IPipelineStep } from './pipeline/pipeline-base';
 import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 
-import { DIGITAL_AUTO, INDENTATION, PYTHON, VELOCITAS } from './utils/codeConstants';
-import { CONTENT_ENCODINGS } from './utils/constants';
+import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { REGEX } from './utils/regex';
 import {
     createArrayFromMultilineString,
@@ -57,32 +55,20 @@ export class CodeConverter {
 
     /**
      * Converts main.py from digital.auto to velocitas structure.
-     * @param {string} base64MainPyContentData
-     * @param {string} base64CodeSnippet
+     * @param {string} mainPyContentData
+     * @param {string} codeSnippet
      * @param {string} appName
-     * @return {string} encodedNewMainPy
+     * @return {string} finalizedMainPy
      * @public
      */
-    public convertMainPy(base64MainPyContentData: string, base64CodeSnippet: string, appName: string): string {
+    public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): string {
         try {
             this.codeContext.appName = appName;
-            const decodedBase64CodeSnippet = Buffer.from(base64CodeSnippet, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
-                CONTENT_ENCODINGS.utf8 as BufferEncoding
-            );
-            this.adaptCodeSnippet(decodedBase64CodeSnippet);
-
-            const decodedMainPyContentData = Buffer.from(base64MainPyContentData, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(
-                CONTENT_ENCODINGS.utf8 as BufferEncoding
-            );
-            const extractedMainPyStructure = this.extractMainPyBaseStructure(decodedMainPyContentData);
-
+            this.adaptCodeSnippet(codeSnippet);
+            const extractedMainPyStructure = this.extractMainPyBaseStructure(mainPyContentData);
             const convertedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure);
-
             const finalizedMainPy = this.finalizeMainPy(convertedMainPy);
-            const encodedNewMainPy = Buffer.from(finalizedMainPy, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(
-                CONTENT_ENCODINGS.base64 as BufferEncoding
-            );
-            return encodedNewMainPy;
+            return finalizedMainPy;
         } catch (error) {
             throw error;
         }
