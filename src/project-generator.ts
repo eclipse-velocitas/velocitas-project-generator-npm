@@ -14,7 +14,7 @@
 
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter } from './code-converter';
-import { MS_TO_WAIT_FOR_GITHUB } from './utils/constants';
+import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
 import { decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 
@@ -55,7 +55,10 @@ export class ProjectGenerator {
             // Delay is introduced to make sure that the git API creates
             // everything we need before doing other API requests
             await delay(MS_TO_WAIT_FOR_GITHUB);
-            await this.updateContent(appName, codeSnippet, decodedVspecPayload);
+            const encodedVspec = encode(`${JSON.stringify(decodedVspecPayload, null, 4)}\n`);
+            const vspecJsonBlobSha = await this.gitRequestHandler.createBlob(encodedVspec);
+
+            await this.updateContent(appName, codeSnippet, LOCAL_VSPEC_PATH, vspecJsonBlobSha);
             return StatusCodes.OK;
         } catch (error) {
             throw error;
@@ -65,7 +68,7 @@ export class ProjectGenerator {
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
-     * @param {string} vspecUri Root URI of Vspec Files.
+     * @param {string} vspecUri Base64 encoded root URI of Vspec Files.
      * @throws {ProjectGeneratorError}
      */
     public async runWithUri(codeSnippet: string, appName: string, vspecUri: string): Promise<number> {
@@ -82,31 +85,19 @@ export class ProjectGenerator {
         }
     }
 
-    private async updateContent(appName: string, codeSnippet: string, vspec: string): Promise<number> {
-        let vspecJsonBlobSha: string = '';
-
-        const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspec);
+    private async updateContent(appName: string, codeSnippet: string, vspecPath: string, vspecJsonBlobSha?: string): Promise<number> {
+        const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspecPath);
         const mainPyBlobSha = await this.getNewMainPySha(appName, codeSnippet);
-
-        if (this.vspecIsPayload(vspec)) {
-            const encodedVspec = encode(`${JSON.stringify(vspec, null, 4)}\n`);
-            vspecJsonBlobSha = await this.gitRequestHandler.createBlob(encodedVspec);
-        }
 
         await this.gitRequestHandler.updateTree(appManifestBlobSha, mainPyBlobSha, vspecJsonBlobSha);
         return StatusCodes.OK;
     }
 
-    private async getNewAppManifestSha(appName: string, vspec: string): Promise<string> {
-        const appManifestContentData = await this.gitRequestHandler.getFileContentData('AppManifest');
+    private async getNewAppManifestSha(appName: string, vspecPath: string): Promise<string> {
+        const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
         decodedAppManifestContent[0].Name = appName.toLowerCase();
-
-        if (this.vspecIsPayload(vspec)) {
-            decodedAppManifestContent[0].vspec = './app/vspec.json';
-        } else {
-            decodedAppManifestContent[0].vspec = vspec;
-        }
+        decodedAppManifestContent[0].vspec = vspecPath;
 
         const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
@@ -114,22 +105,12 @@ export class ProjectGenerator {
     }
 
     private async getNewMainPySha(appName: string, codeSnippet: string): Promise<string> {
-        const mainPyContentData = await this.gitRequestHandler.getFileContentData('main');
+        const mainPyContentData = await this.gitRequestHandler.getFileContentData(MAIN_PY_PATH);
         const decodedMainPyContentData = decode(mainPyContentData);
         const decodedBase64CodeSnippet = decode(codeSnippet);
         const convertedMainPy = this.codeConverter.convertMainPy(decodedMainPyContentData, decodedBase64CodeSnippet, appName);
         const encodedConvertedMainPy = encode(`${convertedMainPy}\n`);
         const mainPyBlobSha = await this.gitRequestHandler.createBlob(encodedConvertedMainPy);
         return mainPyBlobSha;
-    }
-
-    private vspecIsPayload(vspec: string): boolean {
-        if (typeof vspec === 'string') {
-            return false;
-        } else if (typeof vspec === 'object') {
-            return true;
-        } else {
-            throw new Error('Provided Vspec information is faulty');
-        }
     }
 }

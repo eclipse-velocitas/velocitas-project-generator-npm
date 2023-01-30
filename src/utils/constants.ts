@@ -29,3 +29,7 @@ export const GIT_DATA_MODES = {
 export const DEFAULT_REPOSITORY_DESCRIPTION = 'Template generated from eclipse-velocitas';
 export const DEFAULT_COMMIT_MESSAGE = 'Update content with digital.auto code';
 export const MS_TO_WAIT_FOR_GITHUB = 4000;
+
+export const LOCAL_VSPEC_PATH = 'app/vspec.json';
+export const APP_MANIFEST_PATH = 'app/AppManifest.json';
+export const MAIN_PY_PATH = 'app/src/main.py';

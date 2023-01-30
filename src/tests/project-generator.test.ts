@@ -17,6 +17,7 @@ import { ProjectGenerator } from '../project-generator';
 import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import nock from 'nock';
+import { APP_MANIFEST_PATH, MAIN_PY_PATH } from '../utils/constants';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -25,6 +26,9 @@ const OWNER = 'testOwner';
 const REPO = 'testRepo';
 const TOKEN = 'testToken';
 const BASE64_CODE_SNIPPET = 'VGVzdFNuaXBwZXQ=';
+const BASE64_URI = 'aHR0cHM6Ly93d3cudGVzdHZzcGVjLmNvbQ==';
+const BASE64_PAYLOAD =
+    'IntcbiAgICBWZWhpY2xlOiB7XG4gICAgICAgIGNoaWxkcmVuOiB7XG4gICAgICAgIH0sXG4gICAgICAgIGRlc2NyaXB0aW9uOiAnSGlnaC1sZXZlbCB2ZWhpY2xlIGRhdGEuJyxcbiAgICAgICAgdHlwZTogJ2JyYW5jaCcsXG4gICAgICAgIHV1aWQ6ICdjY2M4MjVmOTQxMzk1NDRkYmI1ZjRiZmQwMzNiZWNlNicsXG4gICAgfSxcbn1cbiI=';
 const APP_NAME = 'testApp';
 const BASE64_CONTENT = 'WwogICAgewogICAgICAgICJOYW1lIjogInRlc3RhcHAiCiAgICB9Cl0K';
 const MOCK_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -37,12 +41,12 @@ describe('Project Generator', () => {
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
         expect(generator).to.be.instanceof(ProjectGenerator);
     });
-    it('should run', async () => {
+    it('should run with URI', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().put('/actions/permissions').reply(200);
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents/app/AppManifest.json').reply(200, { content: BASE64_CONTENT });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents/app/src/main.py').reply(200, { content: BASE64_CONTENT });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${APP_MANIFEST_PATH}`).reply(200, { content: BASE64_CONTENT });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${MAIN_PY_PATH}`).reply(200, { content: BASE64_CONTENT });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().post('/git/blobs').reply(200, { sha: MOCK_SHA });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/git/trees/main').reply(200, { sha: MOCK_SHA });
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/trees').reply(200, { sha: MOCK_SHA });
@@ -54,12 +58,32 @@ describe('Project Generator', () => {
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
 
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, 'test');
+        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, BASE64_URI);
+        expect(response).to.be.equal(200);
+    });
+    it('should run with payload', async () => {
+        nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(200);
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().put('/actions/permissions').reply(200);
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${APP_MANIFEST_PATH}`).reply(200, { content: BASE64_CONTENT });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${MAIN_PY_PATH}`).reply(200, { content: BASE64_CONTENT });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().post('/git/blobs').reply(200, { sha: MOCK_SHA });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/git/trees/main').reply(200, { sha: MOCK_SHA });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/trees').reply(200, { sha: MOCK_SHA });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`)
+            .get('/git/refs/heads/main')
+            .reply(200, { object: { sha: MOCK_SHA } });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/commits').reply(200, { sha: MOCK_SHA });
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).put('/actions/permissions/workflow').reply(200);
+        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
+
+        const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
+        const response = await generator.runWithPayload(BASE64_CODE_SNIPPET, APP_NAME, BASE64_PAYLOAD);
         expect(response).to.be.equal(200);
     });
     it('should throw an error on repository generation', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(422);
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, 'test')).to.eventually.be.rejectedWith(Error);
+        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, BASE64_URI)).to.eventually.be.rejectedWith(Error);
     });
 });

@@ -24,6 +24,9 @@ import {
     GIT_DATA_TYPES,
     PYTHON_TEMPLATE_URL,
     MS_TO_WAIT_FOR_GITHUB,
+    LOCAL_VSPEC_PATH,
+    APP_MANIFEST_PATH,
+    MAIN_PY_PATH,
 } from './utils/constants';
 import { delay } from './utils/helpers';
 
@@ -106,7 +109,7 @@ export class GitRequestHandler {
         }
     }
 
-    public async updateTree(appManifestBlobSha: string, mainPyBlobSha: string, vspecJsonBlobSha: string): Promise<number> {
+    public async updateTree(appManifestBlobSha: string, mainPyBlobSha: string, vspecJsonBlobSha: string = ''): Promise<number> {
         try {
             const baseTreeSha = await this.getBaseTreeSha();
             const newTreeSha = await this.createNewTreeSha(appManifestBlobSha, mainPyBlobSha, vspecJsonBlobSha, baseTreeSha);
@@ -122,17 +125,14 @@ export class GitRequestHandler {
         }
     }
 
-    public async getFileContentData(file: string): Promise<string> {
-        let fileContentResponse;
-        if (file === 'AppManifest') {
-            fileContentResponse = await this.gitClient.get('/contents/app/AppManifest.json');
-        } else if (file === 'main') {
-            fileContentResponse = await this.gitClient.get('/contents/app/src/main.py');
-        } else {
-            throw new Error();
+    public async getFileContentData(filePath: string): Promise<string> {
+        try {
+            const fileContentResponse = await this.gitClient.get(`/contents/${filePath}`);
+            const fileContentData = fileContentResponse.data.content;
+            return fileContentData;
+        } catch (error) {
+            throw error;
         }
-        const fileContentData = fileContentResponse.data.content;
-        return fileContentData;
     }
 
     private async checkRepoAvailability(): Promise<number> {
@@ -203,13 +203,13 @@ export class GitRequestHandler {
         try {
             const treeArray = [
                 {
-                    path: 'app/AppManifest.json',
+                    path: APP_MANIFEST_PATH,
                     mode: GIT_DATA_MODES.fileBlob,
                     type: GIT_DATA_TYPES.blob,
                     sha: appManifestBlobSha,
                 },
                 {
-                    path: 'app/src/main.py',
+                    path: MAIN_PY_PATH,
                     mode: GIT_DATA_MODES.fileBlob,
                     type: GIT_DATA_TYPES.blob,
                     sha: mainPyBlobSha,
@@ -217,7 +217,7 @@ export class GitRequestHandler {
             ];
             if (vspecJsonBlobSha) {
                 treeArray.push({
-                    path: 'app/vspec.json',
+                    path: LOCAL_VSPEC_PATH,
                     mode: GIT_DATA_MODES.fileBlob,
                     type: GIT_DATA_TYPES.blob,
                     sha: vspecJsonBlobSha,
