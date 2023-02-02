@@ -18,6 +18,7 @@ import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import nock from 'nock';
 import { APP_MANIFEST_PATH, MAIN_PY_PATH } from '../utils/constants';
+import { VspecUriObject } from '../utils/types';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -26,12 +27,14 @@ const OWNER = 'testOwner';
 const REPO = 'testRepo';
 const TOKEN = 'testToken';
 const BASE64_CODE_SNIPPET = 'VGVzdFNuaXBwZXQ=';
-const BASE64_URI = 'aHR0cHM6Ly93d3cudGVzdHZzcGVjLmNvbQ==';
 const BASE64_PAYLOAD =
     'IntcbiAgICBWZWhpY2xlOiB7XG4gICAgICAgIGNoaWxkcmVuOiB7XG4gICAgICAgIH0sXG4gICAgICAgIGRlc2NyaXB0aW9uOiAnSGlnaC1sZXZlbCB2ZWhpY2xlIGRhdGEuJyxcbiAgICAgICAgdHlwZTogJ2JyYW5jaCcsXG4gICAgICAgIHV1aWQ6ICdjY2M4MjVmOTQxMzk1NDRkYmI1ZjRiZmQwMzNiZWNlNicsXG4gICAgfSxcbn1cbiI=';
 const APP_NAME = 'testApp';
-const BASE64_CONTENT = 'WwogICAgewogICAgICAgICJOYW1lIjogInRlc3RhcHAiCiAgICB9Cl0K';
+const BASE64_CONTENT =
+    'WwogICB7CiAgICAgICJOYW1lIjoidGVzdGFwcCIsCiAgICAgICJWZWhpY2xlTW9kZWwiOnsKICAgICAgICAgInNyYyI6InRlc3RzcmMiCiAgICAgIH0KICAgfQpd';
 const MOCK_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
+const vspecUriObject: VspecUriObject = { repo: 'https://test.com/testOrg/testRepo', commit: '015dd1532922091ce2675755843273c41efbeba8' };
 
 const GITHUB_API_URL = 'https://api.github.com/repos';
 const PYTHON_TEMPLATE_URL = `${GITHUB_API_URL}/eclipse-velocitas/vehicle-app-python-template`;
@@ -58,7 +61,7 @@ describe('Project Generator', () => {
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
 
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, BASE64_URI);
+        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, vspecUriObject);
         expect(response).to.be.equal(200);
     });
     it('should run with payload', async () => {
@@ -84,6 +87,6 @@ describe('Project Generator', () => {
     it('should throw an error on repository generation', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(422);
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, BASE64_URI)).to.eventually.be.rejectedWith(Error);
+        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, vspecUriObject)).to.eventually.be.rejectedWith(Error);
     });
 });

@@ -42,8 +42,15 @@ export const removeEmptyLines = (array: string[]): string[] => {
                 indexesToRemove.add(index);
             }
         }
+        if (e === VELOCITAS.MAIN_METHOD && array[index + 1] === '') {
+            indexesToRemove.add(index + 1);
+        }
     });
     const arrayWithoutEmtpyLines = array.filter((_element, index) => !indexesToRemove.has(index));
+    const indexOfOnStart = arrayWithoutEmtpyLines.indexOf(`${' '.repeat(4)}${VELOCITAS.ON_START}`);
+    if (arrayWithoutEmtpyLines[indexOfOnStart + 1] === '') {
+        arrayWithoutEmtpyLines.splice(indexOfOnStart + 1, 1);
+    }
     return arrayWithoutEmtpyLines;
 };
 

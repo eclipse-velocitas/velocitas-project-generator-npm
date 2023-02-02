@@ -121,7 +121,6 @@ class TestApp(VehicleApp):
 
 
 async def main():
-
     logger.info("Starting TestApp...")
     vehicle_app = TestApp(vehicle)
     await vehicle_app.run()

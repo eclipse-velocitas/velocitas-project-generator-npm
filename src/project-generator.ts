@@ -17,6 +17,7 @@ import { CodeConverter } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
 import { decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
+import { VspecUriObject } from './utils/types';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
@@ -68,17 +69,19 @@ export class ProjectGenerator {
     /**
      * @param {string} codeSnippet Base64 encoded playground code snippet.
      * @param {string} appName Name of the VehicleApp.
-     * @param {string} vspecUri Base64 encoded root URI of Vspec Files.
+     * @param {VspecUriObject} VspecUriObject Containing Repo and Commit hash.
      * @throws {ProjectGeneratorError}
      */
-    public async runWithUri(codeSnippet: string, appName: string, vspecUri: string): Promise<number> {
+    public async runWithUri(codeSnippet: string, appName: string, vspecUriObject: VspecUriObject): Promise<number> {
         try {
-            let decodedVspecString = decode(vspecUri);
+            // Assumption for now is, that all individual vspecs are a fork of COVESA following this path
+            const vspecUriString = `${vspecUriObject.repo}/tree/${vspecUriObject.commit}/spec`;
+
             await this.gitRequestHandler.generateRepo();
             // Delay is introduced to make sure that the git API creates
             // everything we need before doing other API requests
             await delay(MS_TO_WAIT_FOR_GITHUB);
-            await this.updateContent(appName, codeSnippet, decodedVspecString);
+            await this.updateContent(appName, codeSnippet, vspecUriString);
             return StatusCodes.OK;
         } catch (error) {
             throw error;
@@ -97,7 +100,7 @@ export class ProjectGenerator {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
         decodedAppManifestContent[0].Name = appName.toLowerCase();
-        decodedAppManifestContent[0].vspec = vspecPath;
+        decodedAppManifestContent[0].VehicleModel = { src: vspecPath };
 
         const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
