@@ -12,13 +12,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=C0103, C0413, E1101
-
+# flake8: noqa: E501,B950 line too long
 import random
 import asyncio
 import json
 import logging
-import signal
 
 from sdv.util.log import (  # type: ignore
     get_opentelemetry_log_factory,
@@ -60,18 +58,27 @@ class TestApp(VehicleApp):
         self.dog_is_sad = None
 
     async def on_start(self):
-        await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.CLOSE)
+        await self.Vehicle.Cabin.Sunroof.Switch.set("CLOSE")
 
         self.dog = Dog()
         self.dog_mood, self.dog_is_sad = dog.isSad()
 
         if dog_is_sad:
-            await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.OPEN)
+            await self.Vehicle.Cabin.Sunroof.Switch.set("OPEN")
         else:
-            await self.Vehicle.Cabin.Sunroof.Switch.set(self.Vehicle.Cabin.Sunroof.Switch.CLOSE)
+            await self.Vehicle.Cabin.Sunroof.Switch.set("CLOSE")
 
         logger.info("INFO: 	 Is dog sad? {dog_is_sad}")
-        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Dog is {self.dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""}}))
+        await self.publish_mqtt_event(
+            "SmartPhone",
+            json.dumps(
+                {
+                    "result": {
+                        "message": f"""Dog is {self.dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""
+                    }
+                }
+            ),
+        )
 
         logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
 
@@ -83,7 +90,4 @@ async def main():
     await vehicle_app.run()
 
 
-LOOP = asyncio.get_event_loop()
-LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
-LOOP.run_until_complete(main())
-LOOP.close()
+asyncio.run(main())

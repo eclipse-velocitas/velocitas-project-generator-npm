@@ -12,12 +12,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=C0103, C0413, E1101
-
+# flake8: noqa: E501,B950 line too long
 import asyncio
 import json
 import logging
-import signal
 
 from sdv.util.log import (  # type: ignore
     get_opentelemetry_log_factory,
@@ -53,7 +51,7 @@ class TestApp(VehicleApp):
         await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.subscribe(self.on_wiper_start)
 
         logger.info("Turn Wipers to Rain Sensor")
-        await self.Vehicle.Body.Windshield.Front.Wiping.Mode.set(self.Vehicle.Body.Windshield.Front.Wiping.Mode.RAIN_SENSOR)
+        await self.Vehicle.Body.Windshield.Front.Wiping.Mode.set("RAIN_SENSOR")
         logger.info("Start moving Wiper to Service position")
         await self.Vehicle.Body.Windshield.Front.Wiping.System.Frequency.set(45)
 
@@ -64,11 +62,11 @@ class TestApp(VehicleApp):
             logger.info("set Wiper to End position")
             await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.set(90)
             logger.info("Start Wiper movement to End position")
-            await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.set(self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.WIPE)
+            await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.set("WIPE")
             logger.info("set Wiper to 0 position")
             await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.set(0)
             logger.info("Start Wiper movement to 0 position")
-            await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.set(self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.WIPE)
+            await self.Vehicle.Body.Windshield.Front.Wiping.System.Mode.set("WIPE")
             self.wipingCounter += 1
         logger.info("Finished Wiping")
 
@@ -76,10 +74,31 @@ class TestApp(VehicleApp):
         position = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition).value
         logger.info("Listener was triggered")
         logger.info("Wiper is moving")
-        await self.publish_mqtt_event("SmartPhone", json.dumps({"result": {"message": f"""Wiper is finished and will return to {position}"""}}))
-        await self.publish_mqtt_event("CarDash", json.dumps({"result": {"message": f"""Wiper is finished and will return to {position}"""}}))
+        await self.publish_mqtt_event(
+            "SmartPhone",
+            json.dumps(
+                {
+                    "result": {
+                        "message": f"""Wiper is finished and will return to {position}"""
+                    }
+                }
+            ),
+        )
+        await self.publish_mqtt_event(
+            "CarDash",
+            json.dumps(
+                {
+                    "result": {
+                        "message": f"""Wiper is finished and will return to {position}"""
+                    }
+                }
+            ),
+        )
         if position >= (await self.Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition.get()).value:
-            await self.publish_mqtt_event("CarDash", json.dumps({"result": {"message": f"""Wiper {position} reached"""}}))
+            await self.publish_mqtt_event(
+                "CarDash",
+                json.dumps({"result": {"message": f"""Wiper {position} reached"""}}),
+            )
 
     async def on_wiper_start(self, data: DataPointReply):
         WipeMode = data.get(self.Vehicle.Body.Windshield.Front.Wiping.System.Mode).value
@@ -108,7 +127,4 @@ async def main():
     await vehicle_app.run()
 
 
-LOOP = asyncio.get_event_loop()
-LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
-LOOP.run_until_complete(main())
-LOOP.close()
+asyncio.run(main())

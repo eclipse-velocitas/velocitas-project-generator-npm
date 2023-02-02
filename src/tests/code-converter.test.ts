@@ -38,13 +38,38 @@ test_1.set_text(f"{format_1} is finished and will format correctly")
 test_2.set_text(f"{format_2} is finished and will format correctly")
 `;
 const EXPECTED_MQTT_PUBLISH_WITH_FORMAT_STRING = [
-    'await self.publish_mqtt_event("test_1", json.dumps({"result": {"message": f"""{self.format_1} is finished and will format correctly"""}}))',
-    'await self.publish_mqtt_event("test_2", json.dumps({"result": {"message": f"""{self.format_2} is finished and will format correctly"""}}))',
+    [
+        '       await self.publish_mqtt_event(',
+        '            "test_1",',
+        '            json.dumps(',
+        '                {',
+        '                    "result": {',
+        '                        "message": f"""{self.format_1} is finished and will format correctly"""',
+        '                    }',
+        '                }',
+        '            ),',
+        '        )',
+    ],
+    [
+        '        await self.publish_mqtt_event(',
+        '            "test_2",',
+        '            json.dumps(',
+        '                {',
+        '                    "result": {',
+        '                        "message": f"""{self.format_2} is finished and will format correctly"""',
+        '                    }',
+        '                }',
+        '            ),',
+        '        )',
+    ],
 ];
-
 const MQTT_MESSAGE_WITHOUT_FORMAT_STRING = 'plugin.notifyTest("Test is finished and will format correctly")';
-const EXPECTED_MQTT_PUBLISH_WITHOUT_FORMAT_STRING =
-    'await self.publish_mqtt_event("notifyTest", json.dumps({"result": {"message": """Test is finished and will format correctly"""}}))';
+const EXPECTED_MQTT_PUBLISH_WITHOUT_FORMAT_STRING = [
+    '        await self.publish_mqtt_event(',
+    '            "notifyTest",',
+    '            json.dumps({"result": {"message": """Test is finished and will format correctly"""}}),',
+    '        )',
+];
 
 describe('Code Converter', () => {
     it('should initialize', async () => {
