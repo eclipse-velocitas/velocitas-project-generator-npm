@@ -17,6 +17,7 @@
 import asyncio
 import json
 import logging
+import signal
 
 from sdv.util.log import (  # type: ignore
     get_opentelemetry_log_factory,
@@ -40,12 +41,10 @@ DATABROKER_SUBSCRIPTION_TOPIC = "sampleapp/currentSpeed"
 class SampleApp(VehicleApp):
     """
     Sample skeleton vehicle app.
-
     The skeleton subscribes to a getSpeed MQTT topic
     to listen for incoming requests to get
     the current vehicle speed and publishes it to
     a response topic.
-
     It also subcribes to the VehicleDataBroker
     directly for updates of the
     Vehicle.Speed signal and publishes this
@@ -120,4 +119,7 @@ async def main():
     await vehicle_app.run()
 
 
-asyncio.run(main())
+LOOP = asyncio.get_event_loop()
+LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
+LOOP.run_until_complete(main())
+LOOP.close()

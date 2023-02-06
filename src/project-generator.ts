@@ -72,7 +72,7 @@ export class ProjectGenerator {
      * @param {VspecUriObject} VspecUriObject Containing Repo and Commit hash.
      * @throws {ProjectGeneratorError}
      */
-    public async runWithUri(codeSnippet: string, appName: string, vspecUriObject: VspecUriObject): Promise<number> {
+    private async runWithUri(codeSnippet: string, appName: string, vspecUriObject: VspecUriObject): Promise<number> {
         try {
             // Assumption for now is, that all individual vspecs are a fork of COVESA following this path
             const vspecUriString = `${vspecUriObject.repo}/tree/${vspecUriObject.commit}/spec`;

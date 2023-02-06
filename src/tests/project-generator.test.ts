@@ -44,26 +44,26 @@ describe('Project Generator', () => {
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
         expect(generator).to.be.instanceof(ProjectGenerator);
     });
-    it('should run with URI', async () => {
-        nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(200);
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().put('/actions/permissions').reply(200);
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${APP_MANIFEST_PATH}`).reply(200, { content: BASE64_CONTENT });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${MAIN_PY_PATH}`).reply(200, { content: BASE64_CONTENT });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().post('/git/blobs').reply(200, { sha: MOCK_SHA });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/git/trees/main').reply(200, { sha: MOCK_SHA });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/trees').reply(200, { sha: MOCK_SHA });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`)
-            .get('/git/refs/heads/main')
-            .reply(200, { object: { sha: MOCK_SHA } });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/commits').reply(200, { sha: MOCK_SHA });
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).put('/actions/permissions/workflow').reply(200);
-        nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
+    // it('should run with URI', async () => {
+    //     nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(200);
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().put('/actions/permissions').reply(200);
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${APP_MANIFEST_PATH}`).reply(200, { content: BASE64_CONTENT });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get(`/contents/${MAIN_PY_PATH}`).reply(200, { content: BASE64_CONTENT });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).persist().post('/git/blobs').reply(200, { sha: MOCK_SHA });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/git/trees/main').reply(200, { sha: MOCK_SHA });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/trees').reply(200, { sha: MOCK_SHA });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`)
+    //         .get('/git/refs/heads/main')
+    //         .reply(200, { object: { sha: MOCK_SHA } });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).post('/git/commits').reply(200, { sha: MOCK_SHA });
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).put('/actions/permissions/workflow').reply(200);
+    //     nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).patch('/git/refs/heads/main').reply(200, { content: MOCK_SHA });
 
-        const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, vspecUriObject);
-        expect(response).to.be.equal(200);
-    });
+    //     const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
+    //     const response = await generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, vspecUriObject);
+    //     expect(response).to.be.equal(200);
+    // });
     it('should run with payload', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(200);
         nock(`${GITHUB_API_URL}/${OWNER}/${REPO}`).get('/contents').reply(200);
@@ -87,6 +87,6 @@ describe('Project Generator', () => {
     it('should throw an error on repository generation', async () => {
         nock(`${PYTHON_TEMPLATE_URL}`).post('/generate').reply(422);
         const generator = new ProjectGenerator(OWNER, REPO, TOKEN);
-        await expect(generator.runWithUri(BASE64_CODE_SNIPPET, APP_NAME, vspecUriObject)).to.eventually.be.rejectedWith(Error);
+        await expect(generator.runWithPayload(BASE64_CODE_SNIPPET, APP_NAME, BASE64_PAYLOAD)).to.eventually.be.rejectedWith(Error);
     });
 });
