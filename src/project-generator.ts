@@ -59,7 +59,7 @@ export class ProjectGenerator {
             const encodedVspec = encode(`${JSON.stringify(decodedVspecPayload, null, 4)}\n`);
             const vspecJsonBlobSha = await this.gitRequestHandler.createBlob(encodedVspec);
 
-            await this.updateContent(appName, codeSnippet, LOCAL_VSPEC_PATH, vspecJsonBlobSha);
+            await this.updateContent(appName, codeSnippet, `./${LOCAL_VSPEC_PATH}`, vspecJsonBlobSha);
             return StatusCodes.OK;
         } catch (error) {
             throw error;

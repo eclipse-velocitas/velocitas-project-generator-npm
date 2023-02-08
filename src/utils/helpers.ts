@@ -1,6 +1,7 @@
 import { INDENTATION, PYTHON, VELOCITAS } from './codeConstants';
 import { CONTENT_ENCODINGS } from './constants';
 import { REGEX } from './regex';
+import { Buffer } from 'buffer';
 
 export const indentCodeSnippet = (decodedSnippet: string, indentCount: number): string => {
     const indent = ' ';
