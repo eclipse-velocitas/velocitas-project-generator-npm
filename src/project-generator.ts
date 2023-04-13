@@ -99,8 +99,8 @@ export class ProjectGenerator {
     private async getNewAppManifestSha(appName: string, vspecPath: string): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
-        decodedAppManifestContent[0].Name = appName.toLowerCase();
-        decodedAppManifestContent[0].VehicleModel = { src: vspecPath };
+        decodedAppManifestContent.name = appName.toLowerCase();
+        decodedAppManifestContent.vehicleModel = { src: vspecPath };
 
         const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
