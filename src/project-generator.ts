@@ -13,9 +13,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { StatusCodes } from 'http-status-codes';
-import { CodeConverter } from './code-converter';
+import { CodeConverter, ConvertedCode } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { decode, delay, encode } from './utils/helpers';
+import { decode, delay, encode, isNewAppManifest } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
 
@@ -89,31 +89,44 @@ export class ProjectGenerator {
     }
 
     private async updateContent(appName: string, codeSnippet: string, vspecPath: string, vspecJsonBlobSha?: string): Promise<number> {
-        const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspecPath);
-        const mainPyBlobSha = await this.getNewMainPySha(appName, codeSnippet);
+        const convertedCode = await this.getConvertedCode(appName, codeSnippet);
+        const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspecPath, convertedCode.dataPoints);
+        const mainPyBlobSha = await this.getNewMainPySha(convertedCode.finalizedMainPy);
 
         await this.gitRequestHandler.updateTree(appManifestBlobSha, mainPyBlobSha, vspecJsonBlobSha);
         return StatusCodes.OK;
     }
 
-    private async getNewAppManifestSha(appName: string, vspecPath: string): Promise<string> {
+    private async getConvertedCode(appName: string, codeSnippet: string): Promise<ConvertedCode> {
+        const mainPyContentData = await this.gitRequestHandler.getFileContentData(MAIN_PY_PATH);
+        const decodedMainPyContentData = decode(mainPyContentData);
+        const decodedBase64CodeSnippet = decode(codeSnippet);
+        const convertedCode = this.codeConverter.convertMainPy(decodedMainPyContentData, decodedBase64CodeSnippet, appName);
+        return convertedCode;
+    }
+
+    private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: any[]): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
-        decodedAppManifestContent.name = appName.toLowerCase();
-        decodedAppManifestContent.vehicleModel = { src: vspecPath };
+
+        // This is a temporary solution to have a smooth transition
+        if (isNewAppManifest(decodedAppManifestContent)) {
+            decodedAppManifestContent[0].name = appName.toLowerCase();
+            decodedAppManifestContent[0].vehicleModel.src = vspecPath;
+            decodedAppManifestContent[0].vehicleModel.datapoints = dataPoints;
+        } else {
+            decodedAppManifestContent[0].Name = appName.toLowerCase();
+            decodedAppManifestContent[0].VehicleModel = { src: vspecPath };
+        }
 
         const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
         return appManifestBlobSha;
     }
 
-    private async getNewMainPySha(appName: string, codeSnippet: string): Promise<string> {
-        const mainPyContentData = await this.gitRequestHandler.getFileContentData(MAIN_PY_PATH);
-        const decodedMainPyContentData = decode(mainPyContentData);
-        const decodedBase64CodeSnippet = decode(codeSnippet);
-        const convertedMainPy = this.codeConverter.convertMainPy(decodedMainPyContentData, decodedBase64CodeSnippet, appName);
-        const encodedConvertedMainPy = encode(`${convertedMainPy}\n`);
-        const mainPyBlobSha = await this.gitRequestHandler.createBlob(encodedConvertedMainPy);
+    private async getNewMainPySha(finalizedMainPy: string): Promise<string> {
+        const encodedFinalizedMainPy = encode(`${finalizedMainPy}\n`);
+        const mainPyBlobSha = await this.gitRequestHandler.createBlob(encodedFinalizedMainPy);
         return mainPyBlobSha;
     }
 }

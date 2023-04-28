@@ -28,6 +28,40 @@ const APP_NAME = 'test';
 const EXAMPLE_INPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_input_1.py')}`, 'utf8');
 const EXAMPLE_INPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_input_2.py')}`, 'utf8');
 const EXPECTED_OUTPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_output_1.py')}`, 'utf8');
+const EXPECTED_DATAPOINTS_1 = [
+    {
+        path: 'Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition',
+        required: 'true',
+        access: 'write',
+    },
+    {
+        path: 'Vehicle.Body.Windshield.Front.Wiping.System.Mode',
+        required: 'true',
+        access: 'write',
+    },
+    {
+        path: 'Vehicle.Body.Windshield.Front.Wiping.Mode',
+        required: 'true',
+        access: 'write',
+    },
+    {
+        path: 'Vehicle.Body.Windshield.Front.Wiping.System.Frequency',
+        required: 'true',
+        access: 'write',
+    },
+    {
+        path: 'Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition',
+        required: 'true',
+        access: 'write',
+    },
+];
+const EXPECTED_DATAPOINTS_2 = [
+    {
+        path: 'Vehicle.Cabin.Sunroof.Switch',
+        required: 'true',
+        access: 'write',
+    },
+];
 const EXPECTED_OUTPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_output_2.py')}`, 'utf8');
 const VELOCITAS_TEMPLATE_MAINPY = readFileSync(`${path.join(__dirname, 'files/velocitas_template_main.py')}`, 'utf8');
 
@@ -79,12 +113,22 @@ describe('Code Converter', () => {
     it('should format main.py correctly for example 1', async () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_1, APP_NAME);
-        expect(convertedMainPy).to.be.equal(EXPECTED_OUTPUT_1.trim());
+        expect(convertedMainPy.finalizedMainPy).to.be.equal(EXPECTED_OUTPUT_1.trim());
     });
     it('should format main.py correctly for example 2', async () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
-        expect(convertedMainPy).to.be.equal(EXPECTED_OUTPUT_2.trim());
+        expect(convertedMainPy.finalizedMainPy).to.be.equal(EXPECTED_OUTPUT_2.trim());
+    });
+    it('should extract correct datapoints for example 1', async () => {
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_1, APP_NAME);
+        expect(convertedMainPy.dataPoints).to.be.deep.equal(EXPECTED_DATAPOINTS_1);
+    });
+    it('should extract correct datapoints for example 2', async () => {
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
+        expect(convertedMainPy.dataPoints).to.be.deep.equal(EXPECTED_DATAPOINTS_2);
     });
 });
 
@@ -92,14 +136,14 @@ describe('Transform to MQTT', () => {
     it('should transform publish_mqtt_event with format string correctly', async () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, MQTT_MESSAGE_WITH_FORMAT_STRING.trim(), APP_NAME);
-        const newMainPyArray = createArrayFromMultilineString(convertedMainPy.trim());
+        const newMainPyArray = createArrayFromMultilineString(convertedMainPy.finalizedMainPy.trim());
         expect(newMainPyArray.join()).to.include(EXPECTED_MQTT_PUBLISH_WITH_FORMAT_STRING[0]);
         expect(newMainPyArray.join()).to.include(EXPECTED_MQTT_PUBLISH_WITH_FORMAT_STRING[1]);
     });
     it('should transform publish_mqtt_event without format string correctly', async () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, MQTT_MESSAGE_WITHOUT_FORMAT_STRING.trim(), APP_NAME);
-        const newMainPyArray = createArrayFromMultilineString(convertedMainPy.trim());
+        const newMainPyArray = createArrayFromMultilineString(convertedMainPy.finalizedMainPy.trim());
         expect(newMainPyArray.join()).to.include(EXPECTED_MQTT_PUBLISH_WITHOUT_FORMAT_STRING);
     });
 });

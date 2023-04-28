@@ -30,7 +30,7 @@ export class ExtractMethodsStep extends PipelineStep {
         methodStartIndexArray.forEach((methodStartIndex: number) => {
             const tempMethods: string[] = [];
             const tempModifiedMethods: string[] = [];
-            for (let index = methodStartIndex; context.codeSnippetStringArray[index] != ''; index++) {
+            for (let index = methodStartIndex; /\S/.test(context.codeSnippetStringArray[index]); index++) {
                 tempMethods.push(context.codeSnippetStringArray[index]);
                 if (context.codeSnippetStringArray[index].includes(PYTHON.SYNC_METHOD_START)) {
                     let methodLine: string;

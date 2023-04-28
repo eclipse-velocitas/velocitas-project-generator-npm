@@ -23,6 +23,7 @@ import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { REGEX } from './utils/regex';
 import {
+    DataPointDefinition,
     createArrayFromMultilineString,
     createMultilineStringFromArray,
     indentCodeSnippet,
@@ -44,6 +45,11 @@ export class CodeContext {
     codeSnippetForTemplate: string = '';
 }
 
+export interface ConvertedCode {
+    finalizedMainPy: string;
+    dataPoints: any[];
+}
+
 /**
  * Initialize a new `CodeConverter`.
  *
@@ -61,14 +67,15 @@ export class CodeConverter {
      * @return {string} finalizedMainPy
      * @public
      */
-    public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): string {
+    public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): ConvertedCode {
         try {
             this.codeContext.appName = appName;
             this.adaptCodeSnippet(codeSnippet);
             const extractedMainPyStructure = this.extractMainPyBaseStructure(mainPyContentData);
             const convertedMainPy = this.addCodeSnippetToMainPy(extractedMainPyStructure);
             const finalizedMainPy = this.finalizeMainPy(convertedMainPy);
-            return finalizedMainPy;
+            const dataPoints = this.identifyDatapoints(finalizedMainPy);
+            return { finalizedMainPy: finalizedMainPy, dataPoints: dataPoints };
         } catch (error) {
             throw error;
         }
@@ -225,5 +232,35 @@ export class CodeConverter {
             mqttPublishString = `await self.publish_mqtt_event(\n${' '.repeat(4)}"${mqttTopic}",\n${' '.repeat(4)}${jsonDumpsObject}`;
         }
         return mqttPublishString;
+    }
+
+    private identifyDatapoints(finalizedMainPy: string): DataPointDefinition[] {
+        const finalizedMainPyArray = createArrayFromMultilineString(finalizedMainPy);
+        const dataPointsMap = new Map();
+        const dataPoints: DataPointDefinition[] = [];
+        finalizedMainPyArray.forEach((line: string) => {
+            if (line.includes('.Vehicle.')) {
+                const captureAlternatives = '\\.subscribe|\\.get|\\.set|\\)';
+                const dataPointRegExp = new RegExp(`Vehicle.*?(${captureAlternatives})`);
+                const dataPointMatch = dataPointRegExp.exec(line);
+                if (dataPointMatch) {
+                    const dataPointPath = dataPointMatch[0].split(dataPointMatch[1])[0];
+                    switch (dataPointMatch[1]) {
+                        case '.set':
+                            dataPointsMap.set(dataPointPath, 'write');
+                            break;
+                        default:
+                            if (!dataPointsMap.has(dataPointPath)) {
+                                dataPointsMap.set(dataPointPath, 'read');
+                            }
+                            break;
+                    }
+                }
+            }
+        });
+        dataPointsMap.forEach((dataPointAccess: string, dataPointPath: string) =>
+            dataPoints.push({ path: dataPointPath, required: 'true', access: dataPointAccess })
+        );
+        return dataPoints;
     }
 }
