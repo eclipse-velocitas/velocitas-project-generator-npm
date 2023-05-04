@@ -83,6 +83,7 @@ export interface VehicleModel {
     src: string;
     datapoints: DataPointDefinition[];
 }
+
 export interface NewAppManifest {
     name: string;
     vehicleModel: VehicleModel;

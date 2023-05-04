@@ -45,7 +45,7 @@ export class CodeContext {
     codeSnippetForTemplate: string = '';
 }
 
-export interface ConvertedCode {
+export interface CodeConversionResult {
     finalizedMainPy: string;
     dataPoints: any[];
 }
@@ -67,7 +67,7 @@ export class CodeConverter {
      * @return {string} finalizedMainPy
      * @public
      */
-    public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): ConvertedCode {
+    public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): CodeConversionResult {
         try {
             this.codeContext.appName = appName;
             this.adaptCodeSnippet(codeSnippet);

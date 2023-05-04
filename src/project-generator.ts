@@ -13,7 +13,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { StatusCodes } from 'http-status-codes';
-import { CodeConverter, ConvertedCode } from './code-converter';
+import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
 import { decode, delay, encode, isNewAppManifest } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
@@ -97,7 +97,7 @@ export class ProjectGenerator {
         return StatusCodes.OK;
     }
 
-    private async getConvertedCode(appName: string, codeSnippet: string): Promise<ConvertedCode> {
+    private async getConvertedCode(appName: string, codeSnippet: string): Promise<CodeConversionResult> {
         const mainPyContentData = await this.gitRequestHandler.getFileContentData(MAIN_PY_PATH);
         const decodedMainPyContentData = decode(mainPyContentData);
         const decodedBase64CodeSnippet = decode(codeSnippet);
