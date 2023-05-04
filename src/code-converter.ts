@@ -47,7 +47,7 @@ export class CodeContext {
 
 export interface CodeConversionResult {
     finalizedMainPy: string;
-    dataPoints: any[];
+    dataPoints: DataPointDefinition[];
 }
 
 /**
@@ -64,7 +64,8 @@ export class CodeConverter {
      * @param {string} mainPyContentData
      * @param {string} codeSnippet
      * @param {string} appName
-     * @return {string} finalizedMainPy
+     * @return {CodeConversionResult} Result of code conversion containing finalizedMainPy as string and
+     * an array of DataPointDefinition
      * @public
      */
     public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): CodeConversionResult {

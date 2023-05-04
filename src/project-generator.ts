@@ -15,7 +15,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { decode, delay, encode, isNewAppManifest } from './utils/helpers';
+import { DataPointDefinition, decode, delay, encode, isNewAppManifest } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
 
@@ -89,7 +89,7 @@ export class ProjectGenerator {
     }
 
     private async updateContent(appName: string, codeSnippet: string, vspecPath: string, vspecJsonBlobSha?: string): Promise<number> {
-        const convertedCode = await this.getConvertedCode(appName, codeSnippet);
+        const convertedCode = await this.convertCode(appName, codeSnippet);
         const appManifestBlobSha = await this.getNewAppManifestSha(appName, vspecPath, convertedCode.dataPoints);
         const mainPyBlobSha = await this.getNewMainPySha(convertedCode.finalizedMainPy);
 
@@ -97,7 +97,7 @@ export class ProjectGenerator {
         return StatusCodes.OK;
     }
 
-    private async getConvertedCode(appName: string, codeSnippet: string): Promise<CodeConversionResult> {
+    private async convertCode(appName: string, codeSnippet: string): Promise<CodeConversionResult> {
         const mainPyContentData = await this.gitRequestHandler.getFileContentData(MAIN_PY_PATH);
         const decodedMainPyContentData = decode(mainPyContentData);
         const decodedBase64CodeSnippet = decode(codeSnippet);
@@ -105,7 +105,7 @@ export class ProjectGenerator {
         return convertedCode;
     }
 
-    private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: any[]): Promise<string> {
+    private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: DataPointDefinition[]): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
 
