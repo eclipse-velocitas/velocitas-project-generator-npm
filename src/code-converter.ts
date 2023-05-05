@@ -45,6 +45,13 @@ export class CodeContext {
     codeSnippetForTemplate: string = '';
 }
 
+/**
+ * Result of code conversion containing finalizedMainPy as string and
+ * an array of DataPointDefinition
+ * @type CodeConversionResult
+ * @prop {string} finalizedMainPy Finalized main.py.
+ * @prop {DataPointDefinition[]} dataPoints Array of datapoints for AppManifest.json.
+ */
 export interface CodeConversionResult {
     finalizedMainPy: string;
     dataPoints: DataPointDefinition[];
@@ -64,8 +71,7 @@ export class CodeConverter {
      * @param {string} mainPyContentData
      * @param {string} codeSnippet
      * @param {string} appName
-     * @return {CodeConversionResult} Result of code conversion containing finalizedMainPy as string and
-     * an array of DataPointDefinition
+     * @return {CodeConversionResult} Result of code conversion.
      * @public
      */
     public convertMainPy(mainPyContentData: string, codeSnippet: string, appName: string): CodeConversionResult {
