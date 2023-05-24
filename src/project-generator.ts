@@ -15,7 +15,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { DataPointDefinition, decode, delay, encode, isNewAppManifest } from './utils/helpers';
+import { DataPointDefinition, NewAppManifest, decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
 
@@ -107,17 +107,11 @@ export class ProjectGenerator {
 
     private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: DataPointDefinition[]): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
-        let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
+        let decodedAppManifestContent: NewAppManifest[] = JSON.parse(decode(appManifestContentData));
 
-        // This is a temporary solution to have a smooth transition
-        if (isNewAppManifest(decodedAppManifestContent)) {
-            decodedAppManifestContent[0].name = appName.toLowerCase();
-            decodedAppManifestContent[0].vehicleModel.src = vspecPath;
-            decodedAppManifestContent[0].vehicleModel.datapoints = dataPoints;
-        } else {
-            decodedAppManifestContent[0].Name = appName.toLowerCase();
-            decodedAppManifestContent[0].VehicleModel = { src: vspecPath };
-        }
+        decodedAppManifestContent[0].name = appName.toLowerCase();
+        decodedAppManifestContent[0].vehicleModel.src = vspecPath;
+        decodedAppManifestContent[0].vehicleModel.datapoints = dataPoints;
 
         const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);

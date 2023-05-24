@@ -89,7 +89,3 @@ export interface NewAppManifest {
     vehicleModel: VehicleModel;
     runtime: string[];
 }
-
-export const isNewAppManifest = (json: any): json is NewAppManifest[] => {
-    return typeof json.name === 'string' && typeof json.vehicleModel === 'object';
-};

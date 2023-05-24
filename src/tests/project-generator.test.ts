@@ -31,7 +31,7 @@ const BASE64_PAYLOAD =
     'IntcbiAgICBWZWhpY2xlOiB7XG4gICAgICAgIGNoaWxkcmVuOiB7XG4gICAgICAgIH0sXG4gICAgICAgIGRlc2NyaXB0aW9uOiAnSGlnaC1sZXZlbCB2ZWhpY2xlIGRhdGEuJyxcbiAgICAgICAgdHlwZTogJ2JyYW5jaCcsXG4gICAgICAgIHV1aWQ6ICdjY2M4MjVmOTQxMzk1NDRkYmI1ZjRiZmQwMzNiZWNlNicsXG4gICAgfSxcbn1cbiI=';
 const APP_NAME = 'testApp';
 const BASE64_CONTENT =
-    'WwogICB7CiAgICAgICJOYW1lIjoidGVzdGFwcCIsCiAgICAgICJWZWhpY2xlTW9kZWwiOnsKICAgICAgICAgInNyYyI6InRlc3RzcmMiCiAgICAgIH0KICAgfQpd';
+    'WwogICB7CiAgICAgICJuYW1lIjoidGVzdGFwcCIsCiAgICAgICJ2ZWhpY2xlTW9kZWwiOnsKICAgICAgICAgInNyYyI6InRlc3RzcmMiCiAgICAgIH0KICAgfQpd';
 const MOCK_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 const vspecUriObject: VspecUriObject = { repo: 'https://test.com/testOrg/testRepo', commit: '015dd1532922091ce2675755843273c41efbeba8' };
