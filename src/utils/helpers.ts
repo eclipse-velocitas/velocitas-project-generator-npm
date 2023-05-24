@@ -84,7 +84,7 @@ export interface VehicleModel {
     datapoints: DataPointDefinition[];
 }
 
-export interface NewAppManifest {
+export interface AppManifest {
     name: string;
     vehicleModel: VehicleModel;
     runtime: string[];

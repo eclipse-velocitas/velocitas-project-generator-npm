@@ -15,7 +15,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { DataPointDefinition, NewAppManifest, decode, delay, encode } from './utils/helpers';
+import { DataPointDefinition, AppManifest, decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
 
@@ -107,7 +107,7 @@ export class ProjectGenerator {
 
     private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: DataPointDefinition[]): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
-        let decodedAppManifestContent: NewAppManifest[] = JSON.parse(decode(appManifestContentData));
+        let decodedAppManifestContent: AppManifest[] = JSON.parse(decode(appManifestContentData));
 
         decodedAppManifestContent[0].name = appName.toLowerCase();
         decodedAppManifestContent[0].vehicleModel.src = vspecPath;
