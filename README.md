@@ -42,4 +42,4 @@ await generator.runWithPayload(BASE64_CODE_SNIPPET, APP_NAME, BASE64_VSPEC_PAYLO
 ## Contribution
 - [GitHub Issues](https://github.com/eclipse-velocitas/velocitas-project-generator-npm/issues)
 - [Mailing List](https://accounts.eclipse.org/mailing-list/velocitas-dev)
-- [Contribution](https://eclipse-velocitas.github.io/velocitas-docs/docs/contribution/)
+- [Contribution](CONTRIBUTING.md)
