@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "mocha --timeout 10000 --reporter spec --require ts-node/register src/**/*.test.ts"
+    "test": "mocha --timeout 10000 --reporter spec --require ts-node/register src/**/*.test.ts",
+    "coverage": "nyc --reporter=cobertura npm run test"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -25,6 +26,7 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^10.0.0",
     "nock": "^13.2.9",
+    "nyc": "^15.1.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.3"

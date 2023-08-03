@@ -128,4 +128,9 @@
 |yocto-queue|0.1.0|MIT|
 |yargs|16.2.0|MIT|
 |typescript|4.8.3|Apache-2.0|
-
+## Workflows
+| Dependency | Version | License |
+|:-----------|:-------:|--------:|
+|5monkeys/cobertura-action|master|MIT License|
+|actions/checkout|v3|MIT License|
+|actions/setup-node|v3|MIT License|
