@@ -20,6 +20,7 @@ jobs:
       - run: npm run build
       - run: npm run test
       - run: npm publish
+      - run: npm run coverage
         if: contains('refs/heads/main', github.ref)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
