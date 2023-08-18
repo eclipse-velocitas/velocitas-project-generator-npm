@@ -23,7 +23,6 @@ import { PrepareCodeSnippetStep } from './pipeline/prepare-code-snippet';
 import { DIGITAL_AUTO, PYTHON, VELOCITAS } from './utils/codeConstants';
 import { REGEX } from './utils/regex';
 import {
-    DataPointDefinition,
     createArrayFromMultilineString,
     createMultilineStringFromArray,
     indentCodeSnippet,
@@ -50,11 +49,11 @@ export class CodeContext {
  * an array of DataPointDefinition
  * @type CodeConversionResult
  * @prop {string} finalizedMainPy Finalized main.py.
- * @prop {DataPointDefinition[]} dataPoints Array of datapoints for AppManifest.json.
+ * @prop {any[]} dataPoints Array of datapoints for AppManifest.json.
  */
 export interface CodeConversionResult {
     finalizedMainPy: string;
-    dataPoints: DataPointDefinition[];
+    dataPoints: any[];
 }
 
 /**
@@ -241,10 +240,10 @@ export class CodeConverter {
         return mqttPublishString;
     }
 
-    private identifyDatapoints(finalizedMainPy: string): DataPointDefinition[] {
+    private identifyDatapoints(finalizedMainPy: string): any[] {
         const finalizedMainPyArray = createArrayFromMultilineString(finalizedMainPy);
         const dataPointsMap = new Map();
-        const dataPoints: DataPointDefinition[] = [];
+        const dataPoints: any[] = [];
         finalizedMainPyArray.forEach((line: string) => {
             if (line.includes('.Vehicle.')) {
                 const captureAlternatives = '\\.subscribe|\\.get|\\.set|\\)';
@@ -266,7 +265,7 @@ export class CodeConverter {
             }
         });
         dataPointsMap.forEach((dataPointAccess: string, dataPointPath: string) =>
-            dataPoints.push({ path: dataPointPath, required: 'true', access: dataPointAccess })
+            dataPoints.push({ path: dataPointPath, access: dataPointAccess })
         );
         return dataPoints;
     }

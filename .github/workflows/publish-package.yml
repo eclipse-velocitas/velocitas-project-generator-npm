@@ -1,13 +1,12 @@
 name: Publish Package to GitHub
 on:
-  push:
-    branches: ['main']
-  pull_request:
-    branches: ['main']
+  workflow_dispatch:
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Run unit tests and publish package on main
+    name: Publish package on main
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -18,16 +17,7 @@ jobs:
           scope: '@eclipse-velocitas'
       - run: npm ci
       - run: npm run build
-      - run: npm run coverage
       - run: npm publish
         if: contains('refs/heads/main', github.ref)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: 5monkeys/cobertura-action@master
-        with:
-          path: coverage/cobertura-coverage.xml
-          minimum_coverage: 80
-          show_line: true
-          show_branch: true
-          fail_below_threshold: false

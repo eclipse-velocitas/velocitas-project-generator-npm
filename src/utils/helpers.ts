@@ -72,20 +72,3 @@ export const decode = (string: string) =>
     Buffer.from(string, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(CONTENT_ENCODINGS.utf8 as BufferEncoding);
 export const encode = (string: string) =>
     Buffer.from(string, CONTENT_ENCODINGS.utf8 as BufferEncoding).toString(CONTENT_ENCODINGS.base64 as BufferEncoding);
-
-export interface DataPointDefinition {
-    path: string;
-    required: string;
-    access: string;
-}
-
-export interface VehicleModel {
-    src: string;
-    datapoints: DataPointDefinition[];
-}
-
-export interface AppManifest {
-    name: string;
-    vehicleModel: VehicleModel;
-    runtime: string[];
-}

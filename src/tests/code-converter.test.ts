@@ -31,34 +31,28 @@ const EXPECTED_OUTPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_ou
 const EXPECTED_DATAPOINTS_1 = [
     {
         path: 'Vehicle.Body.Windshield.Front.Wiping.System.ActualPosition',
-        required: 'true',
         access: 'write',
     },
     {
         path: 'Vehicle.Body.Windshield.Front.Wiping.System.Mode',
-        required: 'true',
         access: 'write',
     },
     {
         path: 'Vehicle.Body.Windshield.Front.Wiping.Mode',
-        required: 'true',
         access: 'write',
     },
     {
         path: 'Vehicle.Body.Windshield.Front.Wiping.System.Frequency',
-        required: 'true',
         access: 'write',
     },
     {
         path: 'Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition',
-        required: 'true',
         access: 'write',
     },
 ];
 const EXPECTED_DATAPOINTS_2 = [
     {
         path: 'Vehicle.Cabin.Sunroof.Switch',
-        required: 'true',
         access: 'write',
     },
 ];

@@ -1,0 +1,29 @@
+name: Run unit tests and coverage
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Run unit tests and publish package on main
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          check-latest: true
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@eclipse-velocitas'
+      - run: npm ci
+      - run: npm run build
+      - run: npm run coverage
+
+      - uses: 5monkeys/cobertura-action@master
+        with:
+          path: coverage/cobertura-coverage.xml
+          minimum_coverage: 80
+          show_line: true
+          show_branch: true
+          fail_below_threshold: false
