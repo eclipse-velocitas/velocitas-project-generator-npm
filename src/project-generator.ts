@@ -15,7 +15,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { decode, delay, encode } from './utils/helpers';
+import { updateAppManifestContent, decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
 
@@ -108,22 +108,8 @@ export class ProjectGenerator {
     private async getNewAppManifestSha(appName: string, vspecPath: string, dataPoints: any[]): Promise<string> {
         const appManifestContentData = await this.gitRequestHandler.getFileContentData(APP_MANIFEST_PATH);
         let decodedAppManifestContent = JSON.parse(decode(appManifestContentData));
-
-        if (decodedAppManifestContent instanceof Array) {
-            // for backwards compatibility to AppManifest v2
-            decodedAppManifestContent[0].name = appName.toLowerCase();
-            decodedAppManifestContent[0].vehicleModel.src = vspecPath;
-            decodedAppManifestContent[0].vehicleModel.datapoints = dataPoints;
-        } else {
-            const vssInterfaceIndex = decodedAppManifestContent.interfaces.findIndex(
-                (entry: any) => entry.type === 'vehicle-signal-interface'
-            );
-            decodedAppManifestContent.name = appName.toLowerCase();
-            decodedAppManifestContent.interfaces[vssInterfaceIndex].config.src = vspecPath;
-            decodedAppManifestContent.interfaces[vssInterfaceIndex].config.datapoints.required = dataPoints;
-        }
-
-        const encodedAppManifestContent = encode(`${JSON.stringify(decodedAppManifestContent, null, 4)}\n`);
+        const updatedAppManifestContent = updateAppManifestContent(decodedAppManifestContent, appName, vspecPath, dataPoints);
+        const encodedAppManifestContent = encode(`${JSON.stringify(updatedAppManifestContent, null, 4)}\n`);
         const appManifestBlobSha = await this.gitRequestHandler.createBlob(encodedAppManifestContent);
         return appManifestBlobSha;
     }
