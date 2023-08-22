@@ -14,7 +14,7 @@
 
 import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { updateAppManifestContent } from '../utils/helpers';
+import { updateAppManifestContent } from '../utils/appManifest';
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;

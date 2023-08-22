@@ -15,9 +15,10 @@
 import { StatusCodes } from 'http-status-codes';
 import { CodeConverter, CodeConversionResult } from './code-converter';
 import { MS_TO_WAIT_FOR_GITHUB, LOCAL_VSPEC_PATH, APP_MANIFEST_PATH, MAIN_PY_PATH } from './utils/constants';
-import { updateAppManifestContent, decode, delay, encode } from './utils/helpers';
+import { decode, delay, encode } from './utils/helpers';
 import { GitRequestHandler } from './gitRequestHandler';
 import { VspecUriObject } from './utils/types';
+import { updateAppManifestContent } from './utils/appManifest';
 
 /**
  * Initialize a new `ProjectGenerator` with the given `options`.
