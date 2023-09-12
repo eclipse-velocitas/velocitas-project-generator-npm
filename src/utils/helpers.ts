@@ -14,7 +14,7 @@
 
 import { INDENTATION, PYTHON, VELOCITAS } from './codeConstants';
 import { CONTENT_ENCODINGS } from './constants';
-import { REGEX } from './regex';
+import { REGEX, quotedVariableRegex, underscoredVariableRegex } from './regex';
 import { Buffer } from 'buffer';
 
 export const indentCodeSnippet = (decodedSnippet: string, indentCount: number): string => {
@@ -81,6 +81,14 @@ export const insertClassDocString = (array: string[], appName: string): void => 
 export const delay = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 };
+
+export const variableConditionCheck = (elementToCheck: any, variableName: string) =>
+    elementToCheck.includes(`${variableName}`) &&
+    (!elementToCheck.includes(`.${variableName}`) ||
+        !elementToCheck.includes(`${variableName}"`) ||
+        !elementToCheck.includes(`"${variableName}`)) &&
+    !quotedVariableRegex(variableName).test(elementToCheck) &&
+    !underscoredVariableRegex(variableName).test(elementToCheck);
 
 export const decode = (string: string) =>
     Buffer.from(string, CONTENT_ENCODINGS.base64 as BufferEncoding).toString(CONTENT_ENCODINGS.utf8 as BufferEncoding);

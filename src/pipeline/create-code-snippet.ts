@@ -1,6 +1,7 @@
 import { CodeContext } from '../code-converter';
 import { INDENTATION, VELOCITAS } from '../utils/codeConstants';
-import { createMultilineStringFromArray, indentCodeSnippet } from '../utils/helpers';
+import { createMultilineStringFromArray, indentCodeSnippet, variableConditionCheck } from '../utils/helpers';
+import { variableRegex } from '../utils/regex';
 import { PipelineStep } from './pipeline-base';
 
 /**
@@ -13,13 +14,13 @@ export class CreateCodeSnippetForTemplateStep extends PipelineStep {
         context.codeSnippetForTemplate = `${indentCodeSnippet(VELOCITAS.ON_START, INDENTATION.COUNT_CLASS)}\n${indentCodeSnippet(
             this.adaptCodeBlocksToVelocitasStructure(createMultilineStringFromArray(context.codeSnippetStringArray)),
             INDENTATION.COUNT_METHOD
-        )}`;
+            )}`;
     }
     private changeMemberVariables(context: CodeContext) {
         context.variableNames.forEach((variableName: string) => {
             context.codeSnippetStringArray.forEach((stringElement: string, index) => {
                 if (stringElement.includes(`${variableName} =`) && !stringElement.includes(`self.`)) {
-                    context.codeSnippetStringArray[index] = `self.${stringElement}`;
+                    context.codeSnippetStringArray[index] = stringElement.replace(variableName, `self.${variableName}`);
                 }
                 if (stringElement.includes(`, ${variableName}`)) {
                     const re = new RegExp(`(?<!")${variableName}(?!")`, 'g');
@@ -31,6 +32,10 @@ export class CreateCodeSnippetForTemplateStep extends PipelineStep {
                     stringElement.includes(`${variableName} +`)
                 ) {
                     context.codeSnippetStringArray[index] = stringElement.replace(variableName, `self.${variableName}`);
+                }
+
+                if (variableConditionCheck(stringElement,variableName)) {
+                    context.codeSnippetStringArray[index] = stringElement.replace(variableRegex(variableName), `self.${variableName}`);
                 }
             });
         });

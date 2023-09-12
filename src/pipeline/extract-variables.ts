@@ -43,7 +43,7 @@ export class ExtractVariablesStep extends PipelineStep {
         variablesArray.forEach((variableArray: string[]) => {
             variableArray.forEach((variable: string) => {
                 if (variable.includes('=')) {
-                    if (variable.includes(',')) {
+                    if (variable.includes(',') && !variable.includes('= "')) {
                         variable.split(',').forEach((singleVariable: string) => {
                             variableNames.push(singleVariable.split('=')[0].trim());
                         });

@@ -206,23 +206,13 @@ export class CodeConverter {
                 mqttTopic = setTextLine.split('.')[0].trim();
             }
             const mqttMessage = setTextLine.split('"')[1].trim();
-            const mqttPublishLine = this.transformToMqttPublish(mqttTopic, mqttMessage);
+            const mqttPublishLine = this.generateMqttPublishString(mqttMessage, mqttTopic);
             const spacesBeforeSetTextLine = new RegExp(`\\s(?=[^,]*${mqttTopic})`, 'g');
             const spaceCountBeforeSetTextLine = setTextLine.length - setTextLine.replace(spacesBeforeSetTextLine, '').length;
             const newMqttPublishLine = indentCodeSnippet(mqttPublishLine, spaceCountBeforeSetTextLine);
             mainPyStringArray[mainPyStringArray.indexOf(setTextLine)] = newMqttPublishLine;
         }
         return mainPyStringArray;
-    }
-
-    private transformToMqttPublish(mqttTopic: string, mqttMessage: string): string {
-        if (mqttMessage.includes('{')) {
-            const variableInMqttMessage = this.codeContext.variableNames.find((variable) => mqttMessage.includes(variable));
-            if (variableInMqttMessage) {
-                mqttMessage = mqttMessage.replace(variableInMqttMessage, `self.${variableInMqttMessage}`);
-            }
-        }
-        return this.generateMqttPublishString(mqttMessage, mqttTopic);
     }
 
     private generateMqttPublishString(mqttMessage: string, mqttTopic: string) {

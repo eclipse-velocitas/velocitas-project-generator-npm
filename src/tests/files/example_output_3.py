@@ -13,7 +13,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # flake8: noqa: E501,B950 line too long
-import random
 import asyncio
 import json
 import logging
@@ -23,6 +22,7 @@ from sdv.util.log import (  # type: ignore
     get_opentelemetry_log_factory,
     get_opentelemetry_log_format,
 )
+from sdv.vdb.subscriptions import DataPointReply
 from sdv.vehicle_app import VehicleApp
 from sdv_model import Vehicle, vehicle  # type: ignore
 
@@ -33,55 +33,44 @@ logging.getLogger().setLevel("DEBUG")
 logger = logging.getLogger(__name__)
 
 
-class Dog:
-    def isSad(self):
-        l_mood = self.mood()
-        return (l_mood, l_mood in ["Sad", "Crying"])
-
-    def mood(self):
-        return random.choice([
-            "Happy",
-            "Sad",
-            "Crying",
-            "Frightened",
-            "Excited"
-        ])
-
 class TestApp(VehicleApp):
     """Velocitas App for test."""
 
     def __init__(self, vehicle_client: Vehicle):
         super().__init__()
         self.Vehicle = vehicle_client
-        self.l_mood = None
-        self.dog = None
-        self.dog_mood = None
-        self.dog_is_sad = None
+        self.REQUEST_TOPIC = None
+        self.RESPONSE_TOPIC = None
+        self.UPDATE_TOPIC = None
+        self.message = None
+        self.position = None
+        self.vehicle_speed = None
 
     async def on_start(self):
-        await self.Vehicle.Cabin.Sunroof.Switch.set("CLOSE")
+        self.REQUEST_TOPIC = "seatadjuster/setPosition/request"
+        self.RESPONSE_TOPIC = "seatadjuster/setPosition/response"
+        self.UPDATE_TOPIC = "seatadjuster/currentPosition"
 
-        self.dog = Dog()
-        self.dog_mood, self.dog_is_sad = dog.isSad()
+        logger.info("Subscribe for self.position updates")
+        await self.Vehicle.Cabin.Seat.Row1.Pos1.Position.subscribe(self.on_seat_position_changed)
 
-        if self.dog_is_sad:
-            await self.Vehicle.Cabin.Sunroof.Switch.set("OPEN")
+        await asyncio.sleep(3)
+
+        self.position = 300
+        logger.info("Set seat self.position if speed is ZERO")
+        self.vehicle_speed = (await self.Vehicle.Speed.get()).value
+        if self.vehicle_speed == 0:
+            self.message = "Move seat to new position"
+            await self.Vehicle.Cabin.Seat.Row1.Pos1.Position.set(self.position)
         else:
-            await self.Vehicle.Cabin.Sunroof.Switch.set("CLOSE")
+            self.message = "Not allowed to move seat, vehicle is moving!"
 
-        logger.info("INFO: 	 Is dog sad? {self.dog_is_sad}")
-        await self.publish_mqtt_event(
-            "SmartPhone",
-            json.dumps(
-                {
-                    "result": {
-                        "message": f"""Dog is {self.dog_mood} Sunroof: {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}"""
-                    }
-                }
-            ),
-        )
+        logger.info(self.message)
 
-        logger.info("INFO: 	 What is Sunroof's Status? {(await self.Vehicle.Cabin.Sunroof.Switch.get()).value}")
+    async def on_seat_position_changed(self, data: DataPointReply):
+        position = data.get(self.Vehicle.Cabin.Seat.Row1.Pos1.Position).value
+        self.message = "Seat position Updated"
+        logger.info(self.message)
 
 
 async def main():

@@ -28,7 +28,7 @@ export const VELOCITAS = {
     CLASS_METHOD_SIGNATURE: '(self, data: DataPointReply)',
     SUBSCRIPTION_SIGNATURE: '.subscribe(self.',
     INFO_LOGGER_SIGNATURE: 'logger.info(',
-    VEHICLE_CALL: 'await self.Vehicle',
+    VEHICLE_CALL: 'await self.Vehicle.',
     VEHICLE_CALL_AS_ARGUMENT: '(self.Vehicle',
     GET_VALUE: '.get()).value',
     IMPORT_SUBSCRIBE_TOPIC: ', subscribe_topic',

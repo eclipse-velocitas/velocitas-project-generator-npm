@@ -21,7 +21,7 @@ export const REGEX = {
     // Replace content in on_start method (Here digital.auto code comes in)
     FIND_BEGIN_OF_ON_START_METHOD: /[\t ]*async def on\_start\(self\)\:[\r\n]/gm,
     FIND_VEHICLE_INIT: /self\.Vehicle \= vehicle_client/gm,
-    FIND_VEHICLE_OCCURENCE: /vehicle/gm,
+    FIND_VEHICLE_OCCURENCE: /vehicle\./gm,
     FIND_UNWANTED_VEHICLE_CHANGE: /\(await self\.Vehicle/gm,
     FIND_PRINTF_STATEMENTS: /print\(f/gm,
     FIND_PRINT_STATEMENTS: /print\(/gm,
@@ -30,3 +30,7 @@ export const REGEX = {
     FIND_SAMPLE_APP: /SampleApp/gm,
     FIND_SUBSCRIBE_METHOD_CALL: /\.subscribe\(/gm,
 };
+
+export const quotedVariableRegex = (variableName: string) => new RegExp(`=\\s?".*\\b${variableName}\\b.*"`, 'g');
+export const underscoredVariableRegex = (variableName: string) => new RegExp(`_${variableName}|${variableName}_`, 'g');
+export const variableRegex = (variableName: string) => new RegExp(`(?<![\\.\\"])${variableName}(?![\\.\\"])`, 'g');

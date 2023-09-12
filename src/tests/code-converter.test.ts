@@ -27,6 +27,7 @@ const APP_NAME = 'test';
 
 const EXAMPLE_INPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_input_1.py')}`, 'utf8');
 const EXAMPLE_INPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_input_2.py')}`, 'utf8');
+const EXAMPLE_INPUT_3 = readFileSync(`${path.join(__dirname, 'files/example_input_3.py')}`, 'utf8');
 const EXPECTED_OUTPUT_1 = readFileSync(`${path.join(__dirname, 'files/example_output_1.py')}`, 'utf8');
 const EXPECTED_DATAPOINTS_1 = [
     {
@@ -56,7 +57,18 @@ const EXPECTED_DATAPOINTS_2 = [
         access: 'write',
     },
 ];
+const EXPECTED_DATAPOINTS_3 = [
+    {
+        access: 'write',
+        path: 'Vehicle.Cabin.Seat.Row1.Pos1.Position',
+    },
+    {
+        access: 'read',
+        path: 'Vehicle.Speed',
+    },
+];
 const EXPECTED_OUTPUT_2 = readFileSync(`${path.join(__dirname, 'files/example_output_2.py')}`, 'utf8');
+const EXPECTED_OUTPUT_3 = readFileSync(`${path.join(__dirname, 'files/example_output_3.py')}`, 'utf8');
 const VELOCITAS_TEMPLATE_MAINPY = readFileSync(`${path.join(__dirname, 'files/velocitas_template_main.py')}`, 'utf8');
 
 const MQTT_MESSAGE_WITH_FORMAT_STRING = `
@@ -114,6 +126,11 @@ describe('Code Converter', () => {
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
         expect(convertedMainPy.finalizedMainPy).to.be.equal(EXPECTED_OUTPUT_2.trim());
     });
+    it('should format main.py correctly for example 3', async () => {
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_3, APP_NAME);
+        expect(convertedMainPy.finalizedMainPy).to.be.equal(EXPECTED_OUTPUT_3.trim());
+    });
     it('should extract correct datapoints for example 1', async () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_1, APP_NAME);
@@ -123,6 +140,11 @@ describe('Code Converter', () => {
         const codeConverter: CodeConverter = new CodeConverter();
         const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_2, APP_NAME);
         expect(convertedMainPy.dataPoints).to.be.deep.equal(EXPECTED_DATAPOINTS_2);
+    });
+    it('should extract correct datapoints for example 3', async () => {
+        const codeConverter: CodeConverter = new CodeConverter();
+        const convertedMainPy = codeConverter.convertMainPy(VELOCITAS_TEMPLATE_MAINPY, EXAMPLE_INPUT_3, APP_NAME);
+        expect(convertedMainPy.dataPoints).to.be.deep.equal(EXPECTED_DATAPOINTS_3);
     });
 });
 

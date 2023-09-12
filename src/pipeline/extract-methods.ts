@@ -1,6 +1,7 @@
 import { CodeContext } from '../code-converter';
 import { DIGITAL_AUTO, INDENTATION, PYTHON, VELOCITAS } from '../utils/codeConstants';
-import { createMultilineStringFromArray, indentCodeSnippet } from '../utils/helpers';
+import { createMultilineStringFromArray, indentCodeSnippet, variableConditionCheck } from '../utils/helpers';
+import { variableRegex } from '../utils/regex';
 import { PipelineStep } from './pipeline-base';
 
 /**
@@ -24,7 +25,6 @@ export class ExtractMethodsStep extends PipelineStep {
                 methodStartIndexArray.push(methodStartIndex as number);
             }
         });
-
         const methodArray: string[][] = [];
         const modifiedMethodArray: string[][] = [];
         methodStartIndexArray.forEach((methodStartIndex: number) => {
@@ -83,14 +83,8 @@ export class ExtractMethodsStep extends PipelineStep {
     }
     private changeMemberVariablesInString(codeSnippet: string, context: CodeContext): string {
         context.variableNames?.forEach((variableName: string) => {
-            if (
-                codeSnippet.includes(`${variableName}`) &&
-                (!codeSnippet.includes(`.${variableName}`) ||
-                    !codeSnippet.includes(`${variableName}"`) ||
-                    !codeSnippet.includes(`"${variableName}`))
-            ) {
-                const re = new RegExp(`(?<![\\.\\"])${variableName}(?![\\.\\"])`, 'g');
-                codeSnippet = codeSnippet.replace(re, `self.${variableName}`);
+            if (variableConditionCheck(codeSnippet,variableName)) {
+                codeSnippet = codeSnippet.replace(variableRegex(variableName), `self.${variableName}`);
             }
         });
         return codeSnippet;
