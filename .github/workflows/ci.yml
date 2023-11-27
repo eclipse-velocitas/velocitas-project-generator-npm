@@ -19,6 +19,17 @@ on:
   pull_request:
     branches: ['main']
 jobs:
+  lint-job:
+    name: "Run linters"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Linters
+        uses: pre-commit/action@v3.0.0
+
   build:
     runs-on: ubuntu-latest
     name: Run unit tests and publish package on main
