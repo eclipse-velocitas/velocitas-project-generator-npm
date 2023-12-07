@@ -12,7 +12,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 # flake8: noqa: E501,B950 line too long
 import asyncio
 import json

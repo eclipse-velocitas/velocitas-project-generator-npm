@@ -30,6 +30,7 @@ repos:
       - id: remove-crlf
       - id: insert-license
         files: '.*\.(py|pyi|yaml|yml|sh|helmignore|dockerignore|gitignore)$'
+        exclude: ^src/tests/files/
         args:
           - --license-filepath
           - license_header.txt
