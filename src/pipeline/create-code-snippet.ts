@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Contributors to the Eclipse Foundation
+// Copyright (c) 2023-2024 Contributors to the Eclipse Foundation
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -28,7 +28,7 @@ export class CreateCodeSnippetForTemplateStep extends PipelineStep {
         context.codeSnippetForTemplate = `${indentCodeSnippet(VELOCITAS.ON_START, INDENTATION.COUNT_CLASS)}\n${indentCodeSnippet(
             this.adaptCodeBlocksToVelocitasStructure(createMultilineStringFromArray(context.codeSnippetStringArray)),
             INDENTATION.COUNT_METHOD
-            )}`;
+        )}`;
     }
     private changeMemberVariables(context: CodeContext) {
         context.variableNames.forEach((variableName: string) => {
@@ -48,7 +48,7 @@ export class CreateCodeSnippetForTemplateStep extends PipelineStep {
                     context.codeSnippetStringArray[index] = stringElement.replace(variableName, `self.${variableName}`);
                 }
 
-                if (variableConditionCheck(stringElement,variableName)) {
+                if (variableConditionCheck(stringElement, variableName)) {
                     context.codeSnippetStringArray[index] = stringElement.replace(variableRegex(variableName), `self.${variableName}`);
                 }
             });

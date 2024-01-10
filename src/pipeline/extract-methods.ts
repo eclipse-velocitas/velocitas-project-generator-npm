@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Contributors to the Eclipse Foundation
+// Copyright (c) 2023-2024 Contributors to the Eclipse Foundation
 //
 // This program and the accompanying materials are made available under the
 // terms of the Apache License, Version 2.0 which is available at
@@ -97,7 +97,7 @@ export class ExtractMethodsStep extends PipelineStep {
     }
     private changeMemberVariablesInString(codeSnippet: string, context: CodeContext): string {
         context.variableNames?.forEach((variableName: string) => {
-            if (variableConditionCheck(codeSnippet,variableName)) {
+            if (variableConditionCheck(codeSnippet, variableName)) {
                 codeSnippet = codeSnippet.replace(variableRegex(variableName), `self.${variableName}`);
             }
         });
