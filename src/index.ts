@@ -14,3 +14,4 @@
 
 export { ProjectGenerator } from './project-generator';
 export { ProjectGeneratorError } from './project-generator-error';
+export { CodeConverter } from './code-converter';
