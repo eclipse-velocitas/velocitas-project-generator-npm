@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run Linters
         uses: pre-commit/action@v3.0.0
@@ -34,8 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Run unit tests and publish package on main
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 'lts/Hydrogen'
           check-latest: true
@@ -45,7 +45,7 @@ jobs:
       - run: npm run build
       - run: npm run coverage
 
-      - uses: 5monkeys/cobertura-action@master
+      - uses: 5monkeys/cobertura-action@v13
         with:
           path: coverage/cobertura-coverage.xml
           minimum_coverage: 80
