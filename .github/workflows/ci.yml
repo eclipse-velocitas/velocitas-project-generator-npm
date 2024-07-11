@@ -35,7 +35,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    name: Run unit tests and publish package on main
+    name: Run unit tests and report coverage
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,24 +47,15 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run coverage
-      - name: Check conditions for upload
-        id: check-conditions
-        run: |
-          # We can only upload coverage report if origin repo for PR is same as target repo
-          if [[ ("${{ github.event_name }}" == "pull_request") && \
-                ("${{ github.event.pull_request.head.repo.name }}" == "${{ github.repository}}") ]]; then
-            echo "publish_comment=true" >> $GITHUB_OUTPUT
-          else
-            echo "publish_comment=false" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
 
-      - name: Add comment to Pull Request
-        if: ${{ steps.check-conditions.publish_comment == 'true' }}
-        uses: 5monkeys/cobertura-action@v14
+      - uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          path: coverage/cobertura-coverage.xml
-          minimum_coverage: 80
-          show_line: true
-          show_branch: true
-          fail_below_threshold: false
+          filename: coverage/cobertura-coverage.xml
+          badge: true
+          format: markdown
+          hide_complexity: true
+          indicators: true
+          output: both
+
+      - run: |
+          cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
